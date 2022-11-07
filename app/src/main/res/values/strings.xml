@@ -234,6 +234,14 @@
     <string name="chat_message_voice_recording_received_notification">You have received a voice message</string>
     <string name="chat_message_voice_recording">Voice message</string>
 
+    <!-- Chat reactions -->
+    <string name="chat_message_reaction_received">%s has reacted by %s to: %s</string>
+    <string name="emoji_love" translatable="false">❤️</string>
+    <string name="emoji_thumbs_up" translatable="false">👍</string>
+    <string name="emoji_laughing" translatable="false">😂</string>
+    <string name="emoji_surprised" translatable="false">😮</string>
+    <string name="emoji_tear" translatable="false">😢</string>
+
     <!-- Recordings -->
     <string name="recordings_empty_list">No recordings</string>
     <string name="recordings_export">Export recording using…</string>

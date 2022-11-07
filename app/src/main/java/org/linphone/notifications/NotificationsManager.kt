@@ -181,6 +181,56 @@ class NotificationsManager(private val context: Context) {
             }
         }
 
+        override fun onReactionReceived(
+            core: Core,
+            chatRoom: ChatRoom,
+            message: ChatMessage,
+            address: Address,
+            reaction: String
+        ) {
+            Log.i("[Notifications Manager] Reaction received [$reaction] from [${address.asStringUriOnly()}] for chat message [$message]")
+            if (corePreferences.disableChat) return
+
+            if (corePreferences.preventInterfaceFromShowingUp) {
+                Log.w("[Notifications Manager] We were asked to not show the chat notifications")
+                return
+            }
+
+            if (currentlyDisplayedChatRoomAddress == chatRoom.peerAddress.asStringUriOnly()) {
+                Log.i("[Notifications Manager] Chat room is currently displayed, do not notify received reaction")
+                // Mark as read is now done in the DetailChatRoomFragment
+                return
+            }
+
+            val id = LinphoneUtils.getChatRoomId(chatRoom.localAddress, chatRoom.peerAddress)
+            val mute = corePreferences.chatRoomMuted(id)
+            if (mute) {
+                Log.i("[Notifications Manager] Chat room $id has been muted")
+                return
+            }
+
+            if (coreContext.contactsManager.isAddressMyself(address)) {
+                Log.i("[Notifications Manager] Reaction has been sent by ourselves, do not notify it")
+                return
+            }
+
+            if (corePreferences.chatRoomShortcuts) {
+                if (ShortcutsHelper.isShortcutToChatRoomAlreadyCreated(context, chatRoom)) {
+                    Log.i("[Notifications Manager] Chat room shortcut already exists")
+                } else {
+                    Log.i("[Notifications Manager] Ensure chat room shortcut exists for bubble notification")
+                    ShortcutsHelper.createShortcutsToChatRooms(context)
+                }
+            }
+
+            val notifiable = createChatReactionNotifiable(chatRoom, reaction, address, message)
+            if (notifiable.messages.isNotEmpty()) {
+                displayChatNotifiable(chatRoom, notifiable)
+            } else {
+                Log.e("[Notifications Manager] Notifiable is empty but we should have displayed the reaction!")
+            }
+        }
+
         override fun onChatRoomRead(core: Core, chatRoom: ChatRoom) {
             val address = chatRoom.peerAddress.asStringUriOnly()
             val notifiable = chatNotificationsMap[address]
@@ -679,12 +729,48 @@ class NotificationsManager(private val context: Context) {
             notifiable.messages.add(notifiableMessage)
         }
 
-        if (room.hasCapability(ChatRoomCapabilities.OneToOne.toInt())) {
-            notifiable.isGroup = false
-        } else {
-            notifiable.isGroup = true
-            notifiable.groupTitle = room.subject
+        return notifiable
+    }
+
+    private fun createChatReactionNotifiable(
+        room: ChatRoom,
+        reaction: String,
+        from: Address,
+        message: ChatMessage
+    ): Notifiable {
+        val notifiable = getNotifiableForRoom(room)
+
+        val friend = coreContext.contactsManager.findContactByAddress(from)
+        val roundPicture = ImageUtils.getRoundBitmapFromUri(context, friend?.getThumbnailUri())
+        val displayName = friend?.name ?: LinphoneUtils.getDisplayName(from)
+
+        var originalMessage = message.contents.find { content -> content.isText }?.utf8Text ?: ""
+        if (originalMessage.isEmpty()) {
+            val isConferenceInvite = message.contents.firstOrNull()?.isIcalendar ?: false
+            if (isConferenceInvite) {
+                originalMessage = AppUtils.getString(R.string.conference_invitation_received_notification)
+            } else {
+                for (content in message.contents) {
+                    for (content in message.contents) {
+                        if (originalMessage.isNotEmpty()) {
+                            originalMessage += ", "
+                        }
+                        originalMessage += content.name
+                    }
+                }
+            }
         }
+        val text = AppUtils.getString(R.string.chat_message_reaction_received).format(displayName, reaction, originalMessage)
+
+        val notifiableMessage = NotifiableMessage(
+            text,
+            friend,
+            displayName,
+            message.time,
+            senderAvatar = roundPicture,
+            isOutgoing = false
+        )
+        notifiable.messages.add(notifiableMessage)
 
         return notifiable
     }
@@ -699,6 +785,13 @@ class NotificationsManager(private val context: Context) {
             notifiable.remoteAddress = room.peerAddress.asStringUriOnly()
 
             chatNotificationsMap[address] = notifiable
+
+            if (room.hasCapability(ChatRoomCapabilities.OneToOne.toInt())) {
+                notifiable.isGroup = false
+            } else {
+                notifiable.isGroup = true
+                notifiable.groupTitle = room.subject
+            }
         }
         return notifiable
     }

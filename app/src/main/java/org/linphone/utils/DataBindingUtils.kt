@@ -34,6 +34,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.Guideline
 import androidx.databinding.*
+import androidx.lifecycle.LifecycleOwner
 import coil.dispose
 import coil.load
 import coil.request.CachePolicy
@@ -45,7 +46,6 @@ import org.linphone.BR
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
-import org.linphone.activities.GenericActivity
 import org.linphone.activities.main.settings.SettingListener
 import org.linphone.activities.voip.data.ConferenceParticipantDeviceData
 import org.linphone.activities.voip.views.ScrollDotsView
@@ -230,7 +230,9 @@ fun setListener(view: SeekBar, lambda: (Any) -> Unit) {
 fun setInflatedViewStubLifecycleOwner(view: View, enable: Boolean) {
     val binding = DataBindingUtil.bind<ViewDataBinding>(view)
     // This is a bit hacky...
-    binding?.lifecycleOwner = view.context as GenericActivity
+    if (view.context is LifecycleOwner) {
+        binding?.lifecycleOwner = view.context as? LifecycleOwner
+    }
 }
 
 @BindingAdapter("entries")
@@ -268,7 +270,9 @@ private fun <T> setEntries(
             binding.setVariable(BR.parent, parent)
 
             // This is a bit hacky...
-            binding.lifecycleOwner = viewGroup.context as GenericActivity
+            if (viewGroup.context is LifecycleOwner) {
+                binding.lifecycleOwner = viewGroup.context as? LifecycleOwner
+            }
 
             viewGroup.addView(binding.root)
         }

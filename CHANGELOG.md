@@ -12,6 +12,9 @@ Group changes to describe their impact on the project, as follows:
 
 ## [5.1.0] - Unreleased
 
+### Added
+- Chat messages emoji "reactions"
+
 ### Changed
 - Replaced voice recordings file name by localized placeholder text, like for video conferences invitations
 - Removed jetifier as it is not needed

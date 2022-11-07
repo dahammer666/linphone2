@@ -758,4 +758,5 @@
     <string name="call_screenshot_taken">Capture sauvegardée : %s</string>
     <string name="chat_message_voice_recording_received_notification">Vous avez reçu un message vocal</string>
     <string name="chat_message_voice_recording">Message vocal</string>
+    <string name="chat_message_reaction_received">%s a réagi par %s à : %s</string>
 </resources>

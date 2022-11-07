@@ -26,6 +26,7 @@ import androidx.lifecycle.MutableLiveData
 import java.util.regex.Pattern
 import org.linphone.R
 import org.linphone.contact.GenericContactData
+import org.linphone.core.Address
 import org.linphone.core.ChatMessage
 import org.linphone.core.ChatMessageListenerStub
 import org.linphone.core.tools.Log
@@ -62,6 +63,8 @@ class ChatMessageData(val chatMessage: ChatMessage) : GenericContactData(chatMes
 
     val isOutgoing = chatMessage.isOutgoing
 
+    val reactions = MutableLiveData<ArrayList<String>>()
+
     var hasPreviousMessage = false
     var hasNextMessage = false
 
@@ -75,6 +78,10 @@ class ChatMessageData(val chatMessage: ChatMessage) : GenericContactData(chatMes
 
         override fun onEphemeralMessageTimerStarted(message: ChatMessage) {
             updateEphemeralTimer()
+        }
+
+        override fun onReactionReceived(message: ChatMessage, address: Address, reaction: String) {
+            updateReactionsList()
         }
     }
 
@@ -97,6 +104,7 @@ class ChatMessageData(val chatMessage: ChatMessage) : GenericContactData(chatMes
 
         updateChatMessageState(chatMessage.state)
         updateContentsList()
+        updateReactionsList()
     }
 
     override fun destroy() {
@@ -152,6 +160,10 @@ class ChatMessageData(val chatMessage: ChatMessage) : GenericContactData(chatMes
         for (data in contents.value.orEmpty()) {
             data.listener = listener
         }
+    }
+
+    fun showReactionsList() {
+        contentListener?.onShowReactionsList(chatMessage)
     }
 
     private fun updateChatMessageState(state: ChatMessage.State) {
@@ -223,6 +235,14 @@ class ChatMessageData(val chatMessage: ChatMessage) : GenericContactData(chatMes
         }
 
         contents.value = list
+    }
+
+    fun updateReactionsList() {
+        val reactionsList = arrayListOf<String>()
+        for (reaction in chatMessage.reactions) {
+            reactionsList.add(reaction.body)
+        }
+        reactions.value = reactionsList
     }
 
     private fun updateEphemeralTimer() {

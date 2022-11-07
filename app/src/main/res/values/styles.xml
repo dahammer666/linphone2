@@ -351,6 +351,10 @@
         <item name="android:fontFamily">sans-serif</item>
     </style>
 
+    <style name="chat_message_emoji_reaction_font">
+        <item name="android:textSize">20sp</item>
+    </style>
+
     <!-- Dialog related -->
 
     <style name="dialog_title_font" parent="@android:style/TextAppearance.Medium">
