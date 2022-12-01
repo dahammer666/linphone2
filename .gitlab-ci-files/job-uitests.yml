@@ -1,0 +1,34 @@
+#dependencies:
+	#install 'Android SDK Command-line Tools' from Android Studio > Tools > SDK Manager > SDK Tools > Android SDK Command-line Tools
+
+
+variables:
+  android_api: 33 #android 13
+  emulator_type: apis #atd for api < 30 more efficient
+  system_architecture: arm64-v8a #x86_64 or x86 for Intels
+  android_system_image: system-images;android-$android_api;google_$emulator_type;$system_architecture
+  emulator_device = pixel_7
+  emulator_name: $emulator_device-api_$android_api-google_$emulator_type-arch_$system_architecture
+
+job-android-uitests:
+
+  stage: uitests
+  tags: [ "deploy" ]
+
+  dependencies:
+    - job-android
+    
+  before_script:
+	- sdkmanager --install $android_system_image > emulatorSystemImageInstallation.log
+	- echo no | ${AVDMANAGER_EXE} --verbose create avd --force --name $emulator_name --package $android_system_image --tag google_$emulator_type --abi $system_architecture --device emulator_device > emulatorCreation.log
+	- abd start-server
+	- emulator -avd $emulator_name """-no-window -no-audio"""& 
+	- ${WAIT_FOR_EMULATOR_EXE}
+	- adb shell input keyevent 82
+
+  script:
+    - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.call.OutgoingCallUITests -PscreportAutoClose=true connectedAndroidTest
+
+  after_script:
+    - adb -s emulator-5554 emu kill
+  	- adb kill-server

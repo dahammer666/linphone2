@@ -131,6 +131,18 @@ class CorePreferences constructor(private val context: Context) {
             config.setBool("app", "read_and_agree_terms_and_privacy", value)
         }
 
+    var useDnsServer: Boolean
+        get() = config.getBool("app", "use_custom_dns_server", false)
+        set(value) {
+            config.setBool("app", "use_custom_dns_server", value)
+        }
+
+    var dnsServerAddress: String
+        get() = config.getString("app", "custom_dns_address", "") ?: ""
+        set(value) {
+            config.setString("app", "custom_dns_address", value)
+        }
+
     /* UI */
 
     var forcePortrait: Boolean
@@ -612,6 +624,9 @@ class CorePreferences constructor(private val context: Context) {
 
     val configPath: String
         get() = context.filesDir.absolutePath + "/.linphonerc"
+
+    val uiTestsConfigPath: String
+        get() = context.filesDir.absolutePath + "/.linphonerc_uitests"
 
     val factoryConfigPath: String
         get() = context.filesDir.absolutePath + "/linphonerc"

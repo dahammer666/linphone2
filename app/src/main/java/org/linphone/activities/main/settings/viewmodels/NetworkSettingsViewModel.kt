@@ -21,6 +21,7 @@ package org.linphone.activities.main.settings.viewmodels
 
 import androidx.lifecycle.MutableLiveData
 import java.lang.NumberFormatException
+import org.linphone.LinphoneApplication
 import org.linphone.activities.main.settings.SettingListenerStub
 
 class NetworkSettingsViewModel : GenericSettingsViewModel() {
@@ -58,11 +59,29 @@ class NetworkSettingsViewModel : GenericSettingsViewModel() {
     }
     val sipPort = MutableLiveData<Int>()
 
+    val useDnsServerListener = object : SettingListenerStub() {
+        override fun onBoolValueChanged(newValue: Boolean) {
+            if (newValue) core.setDnsServersApp(arrayOf(dnsServerAddress.value))
+            else core.setDnsServersApp(arrayOf())
+            LinphoneApplication.corePreferences.useDnsServer = newValue
+        }
+    }
+    val useDnsServer = MutableLiveData<Boolean>()
+
+    val dnsServerAddressListener = object : SettingListenerStub() {
+        override fun onTextValueChanged(newValue: String) {
+            LinphoneApplication.corePreferences.dnsServerAddress = newValue
+        }
+    }
+    val dnsServerAddress = MutableLiveData<String>()
+
     init {
         wifiOnly.value = core.isWifiOnlyEnabled
         allowIpv6.value = core.isIpv6Enabled
         randomPorts.value = getTransportPort() == -1
         sipPort.value = getTransportPort()
+        useDnsServer.value = LinphoneApplication.corePreferences.useDnsServer
+        dnsServerAddress.value = LinphoneApplication.corePreferences.dnsServerAddress
     }
 
     private fun setTransportPort(port: Int) {

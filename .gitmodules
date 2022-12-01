@@ -1,0 +1,3 @@
+[submodule "screport"]
+	path = screport
+	url = https://gitlab.linphone.org/BC/public/screport.git

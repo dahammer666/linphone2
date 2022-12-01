@@ -413,6 +413,11 @@ class CoreContext(
             core.config.setInt("misc", "conference_layout", 1)
         }
 
+        // Dns Server init
+        if (core.config.getBool("app", "use_custom_dns_server", false)) {
+            core.setDnsServersApp(arrayOf(core.config.getString("app", "custom_dns_address", "") ?: ""))
+        }
+
         // Now LIME server URL is set on accounts
         val limeServerUrl = core.limeX3DhServerUrl.orEmpty()
         if (limeServerUrl.isNotEmpty()) {

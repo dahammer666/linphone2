@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-android-extensions'
     id 'kotlin-kapt'
     id 'org.jlleitschuh.gradle.ktlint'
     id 'org.jetbrains.kotlin.android'
@@ -86,6 +87,12 @@ android {
         versionCode appVersionCode
         versionName "${project.version}"
         applicationId getPackageName()
+
+        //testInstrumentationRunnerArguments clearPackageData: 'true'
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testOptions {
+            animationsDisabled = true
+        }
     }
 
     applicationVariants.all { variant ->
@@ -188,7 +195,21 @@ android {
         dataBinding = true
     }
 
+    compileOptions {
+        //sourceCompatibility JavaVersion.VERSION_1_8
+        //targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    adbOptions {
+        installOptions '-g', '-r'
+    }
+
+    kotlinOptions {
+        //jvmTarget = "1.8"
+    }
+
     namespace 'org.linphone'
+    testBuildType 'debug'
 }
 
 dependencies {
@@ -202,6 +223,7 @@ dependencies {
     implementation "androidx.security:security-crypto-ktx:1.1.0-alpha05"
     implementation "androidx.window:window:1.0.0"
     implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.test:rules:1.4.0'
 
     def nav_version = "2.5.3"
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
@@ -243,6 +265,15 @@ dependencies {
 
     // Only enable leak canary prior to release
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.4'
+
+    // UITests dependencies
+    debugImplementation 'androidx.test:runner:1.1.3'
+    debugImplementation 'androidx.test:core:1.1.3'
+    debugImplementation 'androidx.test.ext:junit-ktx:1.1.3'
+
+    debugImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    debugImplementation 'androidx.test.espresso:espresso-idling-resource:3.4.0'
+    debugImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
 }
 
 task generateContactsXml(type: Copy) {
@@ -269,5 +300,166 @@ if (crashlyticsAvailable) {
     afterEvaluate {
         assembleReleaseWithCrashlytics.finalizedBy(uploadCrashlyticsSymbolFileReleaseWithCrashlytics)
         packageReleaseWithCrashlytics.finalizedBy(uploadCrashlyticsSymbolFileReleaseWithCrashlytics)
+    }
+}
+
+// screenshots ui tests
+
+def reportsDirectory = "$buildDir/reports/androidTests/connected"
+def screenshotDirectory = "$reportsDirectory/screenshots"
+
+def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
+    doFirst {
+
+        def failureScreenshotsDirectory = new File(reportsDirectory, 'failures')
+
+        if (!failureScreenshotsDirectory.exists()) {
+            println 'Could not find screenshot failures. Skipping...'
+            return
+        }
+
+        failureScreenshotsDirectory.eachFile { failedTestClassDirectory ->
+            def failedTestClassName = failedTestClassDirectory.name
+
+            failedTestClassDirectory.eachFile { failedTestFile ->
+                def failedTestName = failedTestFile.name
+
+                failedTestFile.eachFile { failedTestCase ->
+                    def failedTestCaseDescription = failedTestCase.name
+                    def pt1 = failedTestCaseDescription.indexOf(".")
+                    def line = failedTestCaseDescription.substring(0,pt1)
+                    def pt2 = failedTestCaseDescription.indexOf(".",pt1)
+                    def name = failedTestCaseDescription.substring(pt1,pt2)
+                    def pt3 = failedTestCaseDescription.indexOf(".",pt2)
+                    if (pt3 != -1) name += " (${failedTestCaseDescription.substring(pt3)})"
+
+                    def failedTestClassJunitReportFile = new File(reportsDirectory, "${failedTestClassName}.html")
+
+                    if (!failedTestClassJunitReportFile.exists()) {
+                        println "Could not find JUnit report file for test class '${failedTestClassJunitReportFile}'"
+                        return
+                    }
+
+                    def failedTestJunitReportContent = failedTestClassJunitReportFile.text
+
+                    def tab0 = "<a href=\"#tab0\">Tests</a>\n</li>\n</ul>\n<div id=\"tab0\" class=\"tab\">"
+                    def tab0Index = failedTestJunitReportContent.indexOf(tab0)
+
+                    if (tab0Index != -1) {
+                        def newtab0 = "<a href=\"#tab0\">Failed tests</a>\n</li>\n<li>\n<a href=\"#tab1\">Tests</a>\n</li>\n</ul>\n<div id=\"tab0\" class=\"tab\">\n<h2>Failed tests</h2>\n</div>\n<div id=\"tab1\" class=\"tab\">"
+                        failedTestJunitReportContent = failedTestJunitReportContent.replace(tab0,newtab0)
+                    }
+
+                    def failedTest = "<h3 class=\"failures\">${failedTestName}</h3>"
+                    def failedTestIndex = failedTestJunitReportContent.indexOf(failedTest)
+                    def screenshotReport = ""
+
+                    if (failedTestIndex == -1) {
+                        def newtestDiv = "<div class=\"test\">\n<a name=\"${failedTestName}\"></a>\n${failedTest}\n<span class=\"code\">\n<pre>\n</pre>\n</span>\n</div>"
+                        def endDiv = "</div>\n<div id=\"tab1\" class=\"tab\">"
+                        failedTestJunitReportContent = failedTestJunitReportContent.replace(endDiv,newtestDiv+endDiv)
+                        failedTestJunitReportContent = failedTestJunitReportContent.replace("<td>${failedTestName}</td>\n<td class=\"success\">passed","<td>${failedTestName}</td>\n<td class=\"failures\">failed")
+
+                        def totalCounterStr = "id=\"tests\">\n<div class=\"counter\">"
+                        def totalCounterStart = failedTestJunitReportContent.indexOf(totalCounterStr) + totalCounterStr.length()
+                        def totalCounterEnd = failedTestJunitReportContent.indexOf("</div>",totalCounterStart)
+
+                        def failureCounterStr = "id=\"failures\">\n<div class=\"counter\">"
+                        def failureCounterStart = failedTestJunitReportContent.indexOf(failureCounterStr,totalCounterEnd) + failureCounterStr.length()
+                        def failureCounterEnd = failedTestJunitReportContent.indexOf("</div>",failureCounterStart)
+
+                        def percentInfoStr = "id=\"successRate\">\n<div class=\"percent\">"
+                        def percentInfoStart = failedTestJunitReportContent.indexOf(percentInfoStr,failureCounterEnd) + percentInfoStr.length()
+                        def percentInfoEnd = failedTestJunitReportContent.indexOf("%</div>",percentInfoStart)
+
+                        def total = failedTestJunitReportContent.substring(totalCounterStart,totalCounterEnd).toInteger()
+                        def failure = failedTestJunitReportContent.substring(failureCounterStart,failureCounterEnd).toInteger()+1
+                        def percent = ((1 - failure/total)*100).toInteger()
+
+                        failedTestJunitReportContent = failedTestJunitReportContent.substring(0,failureCounterStart) + "$failure" + failedTestJunitReportContent.substring(failureCounterEnd)
+                        failedTestJunitReportContent = failedTestJunitReportContent.substring(0,percentInfoStart) + "$percent" + failedTestJunitReportContent.substring(percentInfoEnd)
+
+                        if (failedTestJunitReportContent.indexOf("\"infoBox success\" id=\"successRate\"") != -1) {
+                            failedTestJunitReportContent = failedTestJunitReportContent.replace("\"infoBox success\" id=\"successRate\"", "\"infoBox failures\" id=\"successRate\"")
+                        }
+
+                        failedTestIndex = failedTestJunitReportContent.indexOf(failedTest)
+                    } else screenshotReport = "\n\n"
+
+                    def imagesrc = "failures/${failedTestClassName}/${failedTestName}/${failedTestCase.name}"
+
+                    screenshotReport += "display conficts detected with \"${name}\" line ${line}: (reference | capture | difference)\n"
+                    screenshotReport += "<div style=\"display: table\">\n"
+                    screenshotReport += "<img src=\"${imagesrc}/reference.png\" width =\"220\" style=\"padding: 5px\"/>\n"
+                    screenshotReport += "<img src=\"${imagesrc}/capture.png\" width =\"220\" style=\"padding: 5px\"/>\n"
+                    screenshotReport += "<img src=\"${imagesrc}/difference.png\" width =\"220\" style=\"padding: 5px\"/>\n"
+                    screenshotReport += "</div>"
+
+                    def insertIndex = failedTestJunitReportContent.indexOf("</pre>",failedTestIndex)
+                    def firstPart = failedTestJunitReportContent.substring(0,insertIndex)
+                    def secondPart = failedTestJunitReportContent.substring(insertIndex)
+                    failedTestJunitReportContent = firstPart + screenshotReport + secondPart
+
+                    failedTestClassJunitReportFile.write(failedTestJunitReportContent)
+                }
+            }
+        }
+    }
+}
+
+def clearScreenshotsTask = task('clearScreenshots', type: Exec) {
+    executable "${android.getAdbExe().toString()}"
+    args 'shell', 'rm', '-r', '/sdcard/Pictures/linphone_uitests'
+}
+
+def fetchScreenshotsTask = task('fetchScreenshots', type: Exec, group: 'reporting') {
+    executable "${android.getAdbExe().toString()}"
+    args 'pull', '/sdcard/Pictures/linphone_uitests/.', screenshotDirectory
+
+    doFirst {
+        new File(screenshotDirectory).mkdirs()
+    }
+
+    finalizedBy {
+        clearScreenshotsTask
+    }
+}
+
+def launchScreenshotsComparisonTask = task('launchScreenshotsComparison', type: Exec, group: 'reporting') {
+    workingDir "$rootDir/screport/"
+    def autoClose = "false"
+    if (project.hasProperty("screportAutoClose") ) {
+        autoClose = screportAutoClose
+    }
+    commandLine "python3", "launch.py", "-rp", "$projectDir/src/androidTest/java/org/linphone/screenshots", "-sp", "$projectDir/build/reports/androidTests/connected/screenshots", "-ac", "$autoClose"
+
+    dependsOn() {
+        fetchScreenshotsTask
+    }
+
+    finalizedBy {
+        embedScreenshotsTask
+    }
+}
+
+def isScreenshotComparisonNeededTask = task('isScreenshotComparisonNeeded', type: Exec, group: 'reporting') {
+    commandLine "${android.getAdbExe().toString()}", 'shell', 'cd', '/sdcard/Pictures/linphone_uitests', '||', 'echo false'
+    standardOutput = new ByteArrayOutputStream()
+
+    doLast {
+        launchScreenshotsComparisonTask.onlyIf {"$standardOutput" == ""}
+        fetchScreenshotsTask.onlyIf {"$standardOutput" == ""}
+        clearScreenshotsTask.onlyIf {"$standardOutput" == ""}
+        embedScreenshotsTask.onlyIf {"$standardOutput" == ""}
+    }
+
+    finalizedBy {
+        launchScreenshotsComparisonTask
+    }
+}
+
+gradle.projectsEvaluated {
+    connectedDebugAndroidTest.finalizedBy {
+        isScreenshotComparisonNeededTask
     }
 }
