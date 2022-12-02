@@ -1,19 +1,19 @@
 package org.linphone.methods
 
 import android.content.Intent
-import android.view.View
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.espresso.*
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import java.util.*
 import kotlinx.coroutines.*
-import org.hamcrest.Matcher
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.linphone.LinphoneApplication
@@ -48,6 +48,11 @@ object UITestsUtils {
         // launch app
         Log.i("[UITests] Launch Linphone app")
         if (!isAppLaunch()) { launchApp() }
+        try {
+            onView(withId(R.id.assistant_welcome_layout)).check(doesNotExist())
+        } catch (e: Throwable) {
+            onView(withId(R.id.back)).perform(click())
+        }
         if (!rightAccountConnected() || !accountIsConnected()) {
             removeAllAccounts()
             connectAccount()
@@ -99,7 +104,8 @@ object UITestsUtils {
         Log.i("[UITests] Connect ${manager.appAccountAuthInfo.username} user to Linphone app")
         val core = LinphoneApplication.coreContext.core
         LinphoneApplication.corePreferences.useDnsServer = true
-        LinphoneApplication.corePreferences.dnsServerAddress = manager.dnsServer.first()
+        LinphoneApplication.corePreferences.dnsServerAddress = manager.dnsServer.last()
+        core.setDnsServersApp(manager.dnsServer)
         val accountParams = core.createAccountParams()
         val identity = manager.createAddress(manager.appAccountAuthInfo)
         accountParams.identityAddress = identity
@@ -121,32 +127,6 @@ object UITestsUtils {
                 viewModel.deleteListener.onClicked()
             }
         }
-    }
-
-    fun waitForExistence(matcher: Matcher<View>, timeout: Double) {
-        return waitForView(matcher, timeout, true)
-    }
-
-    fun waitForNonExistence(matcher: Matcher<View>, timeout: Double) {
-        return waitForView(matcher, timeout, false)
-    }
-
-    private fun waitForView(matcher: Matcher<View>, timeout: Double, exist: Boolean) = runBlocking {
-        var result = false
-        val wait = launch(Dispatchers.Default) {
-            repeat(timeout.toInt() * 10) {
-                try {
-                    onView(matcher).check(matches(isDisplayed()))
-                    result = true
-                    cancel()
-                } catch (_: Exception) {
-                    // do nothing to retry until timeout
-                }
-                delay(100)
-            }
-        }
-        wait.join()
-        assert(result) { "[UITests] $matcher still ${if (exist) "not " else ""}displayed after $timeout seconds" }
     }
 
     fun ViewInteraction.checkWithTimeout(viewAssert: ViewAssertion, timeout: Double): ViewInteraction = runBlocking {

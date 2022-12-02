@@ -5,6 +5,7 @@ import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.test.rule.GrantPermissionRule
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -22,6 +23,16 @@ class OutgoingCallUITests {
 
     @get:Rule
     val screenshotsRule = ScreenshotsRule(true)
+
+    @get:Rule
+    var mGrantPermissionRule = GrantPermissionRule.grant(
+        "android.permission.READ_PHONE_NUMBERS",
+        "android.permission.MANAGE_OWN_CALLS",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.READ_PHONE_STATE",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.RECORD_AUDIO"
+    )
 
     @Before
     fun setUp() {
