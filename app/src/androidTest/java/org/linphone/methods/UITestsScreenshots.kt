@@ -19,7 +19,7 @@ object UITestsScreenshots {
                 getExternalStoragePublicDirectory(DIRECTORY_PICTURES),
                 "linphone_uitests"
             ).absolutePath,
-            "$testClass/$testFunction/$startTime"
+            testClass + File.separator + testFunction + File.separator + startTime
         )
     }
 
@@ -45,7 +45,7 @@ object UITestsScreenshots {
     ) {
         if (!screenshotComparison) return
         if (name.contains(".") || variant?.contains(".") == true) {
-            throw Exception("[UITests] \".\" character is forbidden for screencheck methods arguments name and variant")
+            throw Exception("[UITests] \".\" character is forbidden for takeScreenshot methods arguments name and variant")
         }
         screenshot(line.toString() + ".$name" + if (variant != null) ".$variant" else "")
     }
