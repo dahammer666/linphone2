@@ -578,6 +578,8 @@
     <string name="network_settings_allow_ipv6_title">Allow IPv6</string>
     <string name="network_settings_random_ports_title">Use random ports</string>
     <string name="network_settings_sip_port_title">SIP port to use</string>
+    <string name="network_settings_use_dns_server_title">Use custom DNS server</string>
+    <string name="network_settings_dns_server_address_title">DNS server address</string>
 
     <!-- Contacts settings -->
     <string name="contacts_settings_friendlist_subscribe_title">Friendlist subscribe</string>

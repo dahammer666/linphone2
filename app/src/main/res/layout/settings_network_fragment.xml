@@ -92,6 +92,21 @@
                     linphone:enabled="@{!viewModel.randomPorts}"
                     android:visibility="@{viewModel.randomPorts ? View.GONE : View.VISIBLE}"/>
 
+                <include
+                    layout="@layout/settings_widget_switch"
+                    linphone:title="@{@string/network_settings_use_dns_server_title}"
+                    linphone:listener="@{viewModel.useDnsServerListener}"
+                    linphone:checked="@={viewModel.useDnsServer}" />
+
+                <include
+                    layout="@layout/settings_widget_text"
+                    linphone:title="@{@string/network_settings_dns_server_address_title}"
+                    linphone:listener="@{viewModel.dnsServerAddressListener}"
+                    linphone:defaultValue="@{viewModel.dnsServerAddress.toString()}"
+                    linphone:inputType="@{InputType.TYPE_CLASS_TEXT}"
+                    linphone:enabled="@{viewModel.useDnsServer}"
+                    android:visibility="@{viewModel.useDnsServer ? View.VISIBLE : View.GONE}" />
+
             </LinearLayout>
 
         </androidx.core.widget.NestedScrollView>
