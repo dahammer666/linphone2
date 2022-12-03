@@ -21,13 +21,13 @@ job-android:
     - ./gradlew assembleDebug
     - ./gradlew assembleRelease
     
-after_script:
-	- ln -s ./app/build/outputs/apk/debug/linphone-android-debug-*.apk ./apk/debug
-	- ln -s ./app/build/outputs/apk/release/linphone-android-release-*.apk ./apk/release
+  after_script:
+    - ln -s ./app/build/outputs/apk/debug/linphone-android-debug-*.apk ./apk/debug
+    - ln -s ./app/build/outputs/apk/release/linphone-android-release-*.apk ./apk/release
 
   artifacts:
-	paths:
-	  - ./app/build
+    paths:
+      - ./app/build
       - ./apk/debug
       - ./apk/release
     when: always
