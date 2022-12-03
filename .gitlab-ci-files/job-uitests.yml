@@ -2,8 +2,6 @@
   #install 'Android SDK Command-line Tools' from Android Studio > Tools > SDK Manager > SDK Tools > Android SDK Command-line Tools
 
 variables:
-  EMULATOR_PATH: /Users/quentin/Library/Android/sdk/emulator/
-  CMD_LINE_PATH: /Users/quentin/Library/Android/sdk/cmdline-tools/latest/bin/
   android_api: "33" #android 13
   emulator_type: apis #atd for api < 30 more efficient
   system_architecture: x86_64 #arm64-v8a or x86 for Intels
@@ -15,13 +13,12 @@ variables:
 job-android-uitests:
 
   stage: uitests
-  tags: [ "macmini-m1-bis-xcode13" ]
+  tags: [ "macmini-m1-xcode13" ]
 
   dependencies:
     - job-android
 
   before_script:
-    - echo $PATH
     - ${CMD_LINE_PATH}sdkmanager --install "$android_system_image" > emulatorSystemImageInstallation.log
     - echo $android_system_image
     - echo no | ${CMD_LINE_PATH}avdmanager --verbose create avd --force --name $emulator_name --package $android_system_image --tag google_$emulator_type --abi $system_architecture --device $emulator_device > emulatorCreation.log
