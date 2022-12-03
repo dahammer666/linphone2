@@ -1,5 +1,5 @@
 #dependencies:
-	#install 'Android SDK Command-line Tools' from Android Studio > Tools > SDK Manager > SDK Tools > Android SDK Command-line Tools
+  #install 'Android SDK Command-line Tools' from Android Studio > Tools > SDK Manager > SDK Tools > Android SDK Command-line Tools
 
 variables:
   EMULATOR_PATH: /Users/quentin/Library/Android/sdk/emulator/
