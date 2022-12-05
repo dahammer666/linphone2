@@ -38,3 +38,12 @@ job-android-uitests:
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
     - ${ANDROID_HOME}/platform-tools/adb kill-server
+    
+  artifacts:
+    paths:
+      - app/build/reports/androidTests/connected/*
+    when: always
+    reports:
+      junit:
+        - app/build/reports/androidTests/connected/*.html
+    expire_in: 4 week
