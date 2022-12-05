@@ -1,36 +1,39 @@
 #dependencies:
-  #install 'Android SDK Command-line Tools' from Android Studio > Tools > SDK Manager > SDK Tools > Android SDK Command-line Tools
+  #install 'Java SE Development Kit' https://www.oracle.com/java/technologies/downloads/
+  #install 'Android Studio' https://developer.android.com/studio
+  #install 'Android SDK Build-Tools', 'Android SDK Command-line Tools', 'Android Emulator', 'Android SDK Platform-Tools' from :
+      #Android Studio > Tools > SDK Manager > SDK Tools
+      #or Android Studio > Preferences > Appearence & Behavior > System Settings > Android SDK > SDK Tools
 
 variables:
   android_api: "33" #android 13
-  emulator_type: apis #atd for api < 30 more efficient
-  system_architecture: x86_64 #arm64-v8a or x86 for Intels
-  android_system_image: system-images;android-$android_api;google_$emulator_type;$system_architecture
-  emulator_device: pixel_6
-  emulator_name: $emulator_device-api_$android_api-google_$emulator_type-arch_$system_architecture
+  emulator_type: "apis" #atd for api < 30 more efficient
+  system_architecture: "arm64-v8a" #x86_64 or x86 for Intels
+  android_system_image: "system-images;android-$android_api;google_$emulator_type;$system_architecture" #'sdkmanager --list | grep system-images' to have all existing configs
+  emulator_device: "pixel_6"
+  emulator_name: "$emulator_device-api_$android_api-google_$emulator_type-arch_$system_architecture"
 
 
 job-android-uitests:
 
   stage: uitests
-  tags: [ "macmini-m1-xcode13" ]
+  tags: [ "macmini-m1-bis-xcode13" ]
 
   dependencies:
     - job-android
 
   before_script:
-    - ${CMD_LINE_PATH}sdkmanager --install "$android_system_image" > emulatorSystemImageInstallation.log
-    - echo $android_system_image
-    - echo no | ${CMD_LINE_PATH}avdmanager --verbose create avd --force --name $emulator_name --package $android_system_image --tag google_$emulator_type --abi $system_architecture --device $emulator_device > emulatorCreation.log
-    - adb start-server
-    - ${EMULATOR_PATH}emulator -avd $emulator_name &
-    - wait-for-android-emulator
-    - adb shell input keyevent 82
+    - ${ANDROID_SDK}/cmdline-tools/latest/bin/sdkmanager --install "$android_system_image" > emulatorSystemImageInstallation.log
+    - echo no | ${ANDROID_SDK}/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name $emulator_name --package $android_system_image --tag google_$emulator_type --abi $system_architecture --device $emulator_device > emulatorCreation.log
+    - ${ANDROID_SDK}/platform-tools/adb start-server
+    - ${ANDROID_SDK}/emulator/emulator -avd $emulator_name &
+    - ${WAIT_FOR_ANDROID_EMULATOR_EXE}
+    - ${ANDROID_SDK}/platform-tools/adb shell input keyevent 82
 
   script:
   - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.call.OutgoingCallUITests -PscreportAutoClose=true connectedAndroidTest
 
   after_script:
-    - adb -s emulator-5554 emu kill
-    - adb -s emulator-5554 emu kill
-    - adb kill-server
+    - ${ANDROID_SDK}/platform-tools/adb -s emulator-5554 emu kill
+    - ${ANDROID_SDK}/platform-tools/adb -s emulator-5554 emu kill
+    - ${ANDROID_SDK}/platform-tools/adb kill-server
