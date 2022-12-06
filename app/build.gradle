@@ -322,12 +322,12 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
                     def pt1 = failedTestCaseDescription.indexOf(".")
                     def line = failedTestCaseDescription.substring(0, pt1)
                     def pt2 = failedTestCaseDescription.indexOf(".", pt1+1)
-                    def name = ""
-                    if (pt2 != -1) {
-                        name = failedTestCaseDescription.substring(pt1 + 1, pt2)
-                        def pt3 = failedTestCaseDescription.indexOf(".", pt2)
-                        name += " (${failedTestCaseDescription.substring(pt3+1)})"
-                    } else name = failedTestCaseDescription.substring(pt1 + 1)
+                    def name = failedTestCaseDescription.substring(pt1+1, pt2)
+                    def pt3 = failedTestCaseDescription.indexOf(".", pt2+1)
+                    if (pt3 != -1) {
+                        def pt4 = failedTestCaseDescription.indexOf(".", pt3+1)
+                        name += " (${failedTestCaseDescription.substring(pt3+1,pt4)})"
+                    }
 
                     def failedTestClassJunitReportFile = new File(reportsDirectory, "${failedTestClassName}.html")
 
@@ -384,12 +384,8 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
 
                     def imagesrc = new File("failures", failedTestClassName + File.separator + failedTestName + File.separator + failedTestCaseDescription).toString()
 
-                    screenshotReport += "display conficts detected with \"${name}\" line ${line}: (reference | capture | difference)\n"
-                    screenshotReport += "<div style=\"display: table\">\n"
-                    screenshotReport += "<img src=\"${imagesrc + File.separator}reference.png\" width =\"230\" style=\"padding: 5px\"/>\n"
-                    screenshotReport += "<img src=\"${imagesrc + File.separator}capture.png\" width =\"230\" style=\"padding: 5px\"/>\n"
-                    screenshotReport += "<img src=\"${imagesrc + File.separator}difference.png\" width =\"230\" style=\"padding: 5px\"/>\n"
-                    screenshotReport += "</div>"
+                    screenshotReport += "display conficts detected with \'${name}\' line ${line}:\n"
+                    screenshotReport += "<img src=\"${imagesrc}\" width =\"800\" />\n"
 
                     def insertIndex = failedTestJunitReportContent.indexOf("</pre>", failedTestIndex)
                     def firstPart = failedTestJunitReportContent.substring(0, insertIndex)
