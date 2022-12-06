@@ -28,22 +28,23 @@ job-android-uitests:
     - echo no | ${ANDROID_HOME}/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name $emulator_name --package $android_system_image --tag google_$emulator_type --abi $system_architecture --device $emulator_device > emulatorCreation.log
     - ${ANDROID_HOME}/platform-tools/adb start-server
     - ${ANDROID_HOME}/emulator/emulator -avd $emulator_name &
-    - ${WAIT_FOR_ANDROID_EMULATOR_EXE}
-    - ${ANDROID_HOME}/platform-tools/adb shell input keyevent 82
+    - ${UTILS}/wait-for-android-emulator
 
   script:
-  - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.call.OutgoingCallUITests -PscreportAutoClose=true connectedAndroidTest
+    - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.call.OutgoingCallUITests -PscreportAutoClose=true connectedAndroidTest
+    - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
+	- ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
+    - ${ANDROID_HOME}/platform-tools/adb kill-server
 
   after_script:
-    - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
-    - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
-    - ${ANDROID_HOME}/platform-tools/adb kill-server
+    - ${UTILS}/html2xml-report -p app/build/reports/androidTests/connected/
+    - mkdir results & mv app/build/reports/androidTests/connected/* results
     
   artifacts:
     paths:
-      - app/build/reports/androidTests/connected/*
+      - results/*
     when: always
     reports:
       junit:
-        - app/build/reports/androidTests/connected/*.html
+        - results/*.xml
     expire_in: 4 week
