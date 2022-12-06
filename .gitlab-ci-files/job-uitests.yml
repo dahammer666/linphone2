@@ -38,7 +38,7 @@ job-android-uitests:
 
   after_script:
     - ${UTILS}/html2xml-report -p app/build/reports/androidTests/connected/
-    - mkdir results & mv app/build/reports/androidTests/connected/* results
+    - mkdir results && mv app/build/reports/androidTests/connected/* results
     
   artifacts:
     paths:
