@@ -109,7 +109,7 @@ class CallViewUITestsMethods {
             throw AssertionError("[UITests] Enable to find the incoming call notification")
         }
         onView(withId(R.id.incoming_call_layout)).checkWithTimeout(matches(isDisplayed()), 5.0)
-        checkCallTime(onView(withId(R.id.outgoing_call_timer)))
+        checkCallTime(onView(withId(R.id.incoming_call_timer)))
     }
 
     fun declineCallFromIncomingCallView() {
