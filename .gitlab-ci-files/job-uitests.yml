@@ -1,5 +1,5 @@
 #dependencies:
-  #install 'Java SE Development Kit' https://www.oracle.com/java/technologies/downloads/
+  #install 'Java SE Development Kit 11' https://www.oracle.com/ca-en/java/technologies/javase/jdk11-archive-downloads.html
   #install 'Android Studio' https://developer.android.com/studio
   #install 'Android SDK Build-Tools', 'Android SDK Command-line Tools', 'Android Emulator', 'Android SDK Platform-Tools' from :
       #Android Studio > Tools > SDK Manager > SDK Tools
@@ -28,17 +28,17 @@ job-android-uitests:
     - echo no | ${ANDROID_HOME}/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name $emulator_name --package $android_system_image --tag google_$emulator_type --abi $system_architecture --device $emulator_device > emulatorCreation.log
     - ${ANDROID_HOME}/platform-tools/adb start-server
     - ${ANDROID_HOME}/emulator/emulator -avd $emulator_name &
-    - ${UTILS}/wait-for-android-emulator
+    - .gitlab-ci-files/wait-for-android-emulator
 
   script:
-    - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.call.OutgoingCallUITests -PscreportAutoClose=true connectedAndroidTest
+    - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.testsuites.CallTestSuite -PscreportAutoClose=true connectedAndroidTest
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
     - ${ANDROID_HOME}/platform-tools/adb kill-server
 
   after_script:
-    - ${UTILS}/html2xml-report -p app/build/reports/androidTests/connected/
     - mkdir results && mv app/build/reports/androidTests/connected/* results
+    - python3 .gitlab-ci-files/html2xml-report.py -p results
     
   artifacts:
     paths:
