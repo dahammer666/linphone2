@@ -11,7 +11,7 @@ import org.linphone.methods.*
 import org.linphone.methods.UITestsScreenshots.takeScreenshot
 
 @RunWith(AndroidJUnit4::class)
-class IncomingCallUITests {
+class IncomingCallPushUITests {
 
     lateinit var methods: CallViewUITestsMethods
 
@@ -27,8 +27,7 @@ class IncomingCallUITests {
         methods = CallViewUITestsMethods()
         takeScreenshot("dialer_view")
         methods.startIncomingCall()
-        methods.openIncomingCallViewFromPush()
-        takeScreenshot("incoming_call_view")
+        takeScreenshot("dialer_view", "incoming_call_push")
     }
 
     @After
@@ -37,26 +36,34 @@ class IncomingCallUITests {
     }
 
     @Test
-    fun testOpenIncomingCallView() {
+    fun testDisplayCallPush() {
         methods.endCall()
         takeScreenshot("dialer_view")
     }
 
     @Test
-    fun testNoAnswerIncomingCallView() {
-        methods.noAnswerCallFromIncomingCall()
+    fun testNoAnswerCallPush() {
+        methods.noAnswerCallFromPush()
         takeScreenshot("dialer_view")
     }
 
     @Test
-    fun testDeclineIncomingCallView() {
-        methods.declineCallFromIncomingCallView()
+    fun testClickOnCallPush() {
+        methods.openIncomingCallViewFromPush()
+        takeScreenshot("incoming_call_view")
+        methods.endCall()
         takeScreenshot("dialer_view")
     }
 
     @Test
-    fun testAcceptIncomingCallView() {
-        methods.answerCallFromIncomingCallView()
+    fun testDeclineCallPush() {
+        methods.declineCallFromPush()
+        takeScreenshot("dialer_view")
+    }
+
+    @Test
+    fun testAnswerCallPush() {
+        methods.answerCallFromPush()
         takeScreenshot("single_call_view")
         methods.endCall()
         takeScreenshot("dialer_view")

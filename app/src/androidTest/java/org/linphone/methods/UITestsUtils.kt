@@ -39,6 +39,21 @@ class ScreenshotsRule(active: Boolean) : TestWatcher() {
     }
 }
 
+object LinphonePermissions {
+
+    val LAUNCH = arrayListOf(
+        "android.permission.READ_PHONE_NUMBERS",
+        "android.permission.MANAGE_OWN_CALLS",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.READ_PHONE_STATE"
+    ).toTypedArray()
+
+    val CALL = LAUNCH + arrayListOf(
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.RECORD_AUDIO"
+    ).toTypedArray()
+}
+
 object UITestsUtils {
 
     private var mainActivityIntent = Intent(getApplicationContext(), MainActivity::class.java)

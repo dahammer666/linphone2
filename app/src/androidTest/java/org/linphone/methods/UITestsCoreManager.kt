@@ -309,33 +309,25 @@ class UITestsRegisteredLinphoneCore(authInfo: AuthInfo) {
         assert(result) { "[UITests] $registrationState registration state still not verified after $timeout seconds" }
     }
 
-    fun waitForCallState(callState: Call.State, timeout: Double) = runBlocking {
+    fun waitForCallState(call_state: Call.State, timeout: Double) = runBlocking {
         var result = false
-        val wait = launch { delay(timeout.toLong() * 1000) }
-        val listener = object : CoreListenerStub() {
-            override fun onCallStateChanged(
-                core: Core,
-                call: Call,
-                state: Call.State?,
-                message: String
-            ) {
-                super.onCallStateChanged(core, call, state, message)
-                if (callState == state) {
+        val wait = launch(Dispatchers.Default) {
+            repeat((timeout * 10).toInt()) {
+                if (call_state == callState) {
                     result = true
-                    wait.cancel()
+                    cancel()
                 }
+                delay(100)
             }
         }
-        mCore.addListener(listener)
         wait.join()
-        mCore.removeListener(listener)
-        assert(result) { "[UITests] $callState call state still not verified after $timeout seconds" }
+        assert(result) { "[UITests] $call_state call state still not verified after $timeout seconds (last known state: $callState)" }
     }
 
     fun waitForRecordingState(recording: Boolean, onRemote: Boolean = false, timeout: Double) = runBlocking {
         var result = false
         val wait = launch(Dispatchers.Default) {
-            repeat(timeout.toInt() * 10) { i ->
+            repeat((timeout * 10).toInt()) {
                 if (!onRemote && recording == mCore.currentCall?.params?.isRecording) {
                     result = true
                     cancel()

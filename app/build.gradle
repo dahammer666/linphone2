@@ -325,8 +325,7 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
                     def name = failedTestCaseDescription.substring(pt1+1, pt2)
                     def pt3 = failedTestCaseDescription.indexOf(".", pt2+1)
                     if (pt3 != -1) {
-                        def pt4 = failedTestCaseDescription.indexOf(".", pt3+1)
-                        name += " (${failedTestCaseDescription.substring(pt3+1,pt4)})"
+                        name += " (${failedTestCaseDescription.substring(pt2+1,pt3)})"
                     }
 
                     def failedTestClassJunitReportFile = new File(reportsDirectory, "${failedTestClassName}.html")

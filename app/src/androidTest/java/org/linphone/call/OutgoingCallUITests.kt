@@ -25,14 +25,7 @@ class OutgoingCallUITests {
     val screenshotsRule = ScreenshotsRule(true)
 
     @get:Rule
-    var mGrantPermissionRule = GrantPermissionRule.grant(
-        "android.permission.READ_PHONE_NUMBERS",
-        "android.permission.MANAGE_OWN_CALLS",
-        "android.permission.POST_NOTIFICATIONS",
-        "android.permission.READ_PHONE_STATE",
-        "android.permission.BLUETOOTH_CONNECT",
-        "android.permission.RECORD_AUDIO"
-    )
+    var mGrantPermissionRule = GrantPermissionRule.grant(*LinphonePermissions.CALL)
 
     @Before
     fun setUp() {
