@@ -18,7 +18,6 @@ job-android-uitests:
 
   stage: uitests
   tags: [ "macos-xcode13" ]
-  allow_failure: true
 
   dependencies:
     - job-android
@@ -41,9 +40,8 @@ job-android-uitests:
 
   after_script:
     - mv app/build/reports/androidTests/connected/* reports
-	- mv app/build/outputs/apk/debug ./apks
-    - mv app/build/outputs/apk/release ./apks
-    - python3 --version
+	- mv app/build/outputs/apk/debug/linphone-android-debug-*.apk ./apks/debug
+    - mv app/build/outputs/apk/release/linphone-android-release-*.apk ./apks/release
     - python3 .gitlab-ci-files/html2xml-report.py -p reports
     
   artifacts:
