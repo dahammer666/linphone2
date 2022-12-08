@@ -3,6 +3,7 @@ package org.linphone.call
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
 import androidx.test.rule.GrantPermissionRule
 import java.util.*
 import org.junit.After
@@ -16,6 +17,7 @@ import org.linphone.methods.UITestsScreenshots.takeScreenshot
 import org.linphone.utils.AppUtils.Companion.getString
 
 @RunWith(AndroidJUnit4::class)
+@LargeTest
 class IncomingCallPushUITests {
 
     val methods = CallViewUITestsMethods
