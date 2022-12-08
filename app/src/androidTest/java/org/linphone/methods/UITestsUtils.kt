@@ -54,6 +54,13 @@ object LinphonePermissions {
     ).toTypedArray()
 }
 
+object UITestsView {
+    val dialerView = onView(withId(R.id.incoming_call_layout))
+    val incomingCallView = onView(withId(R.id.incoming_call_layout))
+    val outgoingCallView = onView(withId(R.id.outgoing_call_layout))
+    val singleCallView = onView(withId(R.id.single_call_layout))
+}
+
 object UITestsUtils {
 
     private var mainActivityIntent = Intent(getApplicationContext(), MainActivity::class.java)
