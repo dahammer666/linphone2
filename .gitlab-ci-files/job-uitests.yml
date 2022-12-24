@@ -33,7 +33,7 @@ job-android-uitests:
     - ${ANDROID_HOME}/platform-tools/adb logcat -d > logs/logcats.log
 
   script:
-    - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.testsuites.CallTestSuite -PscreportAutoClose=true connectedAndroidTest --continue
+    - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.testsuites.CallTestSuite -PscreportAutoClose=true connectedAndroidTest --continue || true
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
     - ${ANDROID_HOME}/platform-tools/adb kill-server
