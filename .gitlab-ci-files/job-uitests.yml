@@ -56,5 +56,5 @@ job-android-uitests:
     when: always
     reports:
       junit:
-        - results/*.xml
+        - reports/*.xml
     expire_in: 4 week
