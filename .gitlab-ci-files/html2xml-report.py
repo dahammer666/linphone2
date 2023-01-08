@@ -3,7 +3,7 @@ import os
 from bs4 import BeautifulSoup
 from junit_xml import TestSuite, TestCase
 
-parser = argparse.ArgumentParser('screport',description='screport - The comparison tool to check and manage the conform display of any app')
+parser = argparse.ArgumentParser('html2xml',description='html2xml - Python script to convert html androidTest reports into jUnit xml reports')
 parser.add_argument('-p', '--reports-path',
                     help='The path to search for reports files',
                     required=False,
@@ -53,12 +53,12 @@ for file in classNames:
             message = failure.find("pre")
             images = []
             for img in message.find_all("img"):
-                images.append(img["src"])
+                images.append(os.path.join(path,img["src"]))
                 img.decompose()
             for div in message.find_all("div"):
                 div.decompose()
             Tests[fileName][testName][2] = message.text
-            Tests[fileName][testName][3] = " ".join(images)
+            Tests[fileName][testName][3] = "[[ATTACHMENT|" + " ".join(images) + "]]"
     except:
         pass
 

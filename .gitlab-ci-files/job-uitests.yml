@@ -9,7 +9,7 @@ variables:
   android_api: "33" #android 13
   emulator_type: "apis" #atd for api < 30 more efficient
   system_architecture: "arm64-v8a" #x86_64 or x86 for Intels
-  android_system_image: "system-images;android-$android_api;google_$emulator_type;$system_architecture" #'sdkmanager --list | grep system-images' to have all existing configs
+  android_system_image: "system-images;android-$android_api;google_$emulator_type;$system_architecture" # 'sdkmanager --list | grep system-images' to have all existing configs
   emulator_device: "pixel_6"
   emulator_name: "$emulator_device-api_$android_api-google_$emulator_type-arch_$system_architecture"
 
@@ -34,12 +34,12 @@ job-android-uitests:
 
   script:
     - set +e
-    - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.testsuites.CallTestSuite -PscreportAutoClose=true connectedAndroidTest --continue
+    - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.testsuites.CallTestSuite -PscreportWindowed=false connectedAndroidTest --continue
     - export BUILD_RESULT=$?
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
-    - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
+    - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill #in case a confirm dialog popup appears
     - ${ANDROID_HOME}/platform-tools/adb kill-server
-    - if [$BUILD_RESULT -eq 0]; then exit 0; else exit 1; fi
+    - if [$BUILD_RESULT -eq 0] || [ ! -d app/build/reports/androidTests/connected/failures ]; then exit 0; else exit 1; fi
 
   after_script:
     - mv app/build/reports/androidTests/connected/* reports

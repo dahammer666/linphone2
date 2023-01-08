@@ -419,11 +419,11 @@ def fetchScreenshotsTask = task('fetchScreenshots', type: Exec, group: 'reportin
 
 def launchScreenshotsComparisonTask = task('launchScreenshotsComparison', type: Exec, group: 'reporting') {
     workingDir "$rootDir/screport/"
-    def autoClose = "false"
-    if (project.hasProperty("screportAutoClose") ) {
-        autoClose = screportAutoClose
+    def windowed = "true"
+    if (project.hasProperty("screportWindowed") ) {
+        windowed = screportWindowed
     }
-    commandLine "python3", "launch.py", "-rp", "$projectDir/src/androidTest/java/org/linphone/screenshots", "-sp", "$projectDir/build/reports/androidTests/connected/screenshots", "-ac", "$autoClose"
+    commandLine "python3", "launch.py", "-rp", "$projectDir/src/androidTest/java/org/linphone/screenshots", "-sp", "$projectDir/build/reports/androidTests/connected/screenshots", "-wd", "$windowed"
 
     dependsOn() {
         fetchScreenshotsTask
