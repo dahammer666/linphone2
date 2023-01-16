@@ -302,6 +302,56 @@ def reportsDirectory = new File(buildDir,"reports${File.separator}androidTests${
 def screenshotDirectory = new File(reportsDirectory,"screenshots").absolutePath
 
 def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
+
+    ext.updateSummaryValues = { failedTestJunitReportContent, newFailures ->
+        def totalCounterStr = "id=\"tests\">\n<div class=\"counter\">"
+        def totalCounterStart = failedTestJunitReportContent.indexOf(totalCounterStr) + totalCounterStr.length()
+        def totalCounterEnd = failedTestJunitReportContent.indexOf("</div>", totalCounterStart)
+
+        def failureCounterStr = "id=\"failures\">\n<div class=\"counter\">"
+        def failureCounterStart = failedTestJunitReportContent.indexOf(failureCounterStr, totalCounterEnd) + failureCounterStr.length()
+        def failureCounterEnd = failedTestJunitReportContent.indexOf("</div>", failureCounterStart)
+
+        def percentInfoStr = "id=\"successRate\">\n<div class=\"percent\">"
+        def percentInfoStart = failedTestJunitReportContent.indexOf(percentInfoStr, failureCounterEnd) + percentInfoStr.length()
+        def percentInfoEnd = failedTestJunitReportContent.indexOf("%</div>", percentInfoStart)
+
+        def total = failedTestJunitReportContent.substring(totalCounterStart, totalCounterEnd).toInteger()
+        def failure = failedTestJunitReportContent.substring(failureCounterStart, failureCounterEnd).toInteger() + newFailures
+        def percent = ((1 - failure / total) * 100).toInteger()
+
+        failedTestJunitReportContent = failedTestJunitReportContent.substring(0, failureCounterStart) + "$failure" + failedTestJunitReportContent.substring(failureCounterEnd)
+        failedTestJunitReportContent = failedTestJunitReportContent.substring(0, percentInfoStart) + "$percent" + failedTestJunitReportContent.substring(percentInfoEnd)
+
+        return [failedTestJunitReportContent,failure,percent]
+    }
+
+    ext.addFailedTestsHeader = {failedTestJunitReportContent, mode ->
+        def tab0 = "<a href=\"#tab0\">${mode}</a>\n</li>\n</ul>\n<div id=\"tab0\" class=\"tab\">"
+        def tab0Index = failedTestJunitReportContent.indexOf(tab0)
+
+        if (tab0Index != -1) {
+            def header = ""
+            if (mode == "Classes") header = "<ul class=\"linkList\">\n<table>\n<thead>\n<tr>\n<th>Class</th>\n<th>Test</th>\n</tr>\n</thead>\n</table>\n</ul>\n"
+            def newtab0 = "<a href=\"#tab0\">Failed tests</a>\n</li>\n<li>\n<a href=\"#tab1\">${mode}</a>\n</li>\n</ul>\n<div id=\"tab0\" class=\"tab\">\n<h2>Failed tests</h2>\n${header}</div>\n<div id=\"tab1\" class=\"tab\">"
+            failedTestJunitReportContent = failedTestJunitReportContent.replace(tab0, newtab0)
+        }
+        return failedTestJunitReportContent
+    }
+
+    ext.updateRecapValues = {failedTestJunitReportContent, name, failures, percent, variant ->
+        failedTestJunitReportContent = failedTestJunitReportContent.replace("\"success\"$variant>\n<a href=\"${name}", "\"failures\">\n<a href=\"${name}")
+        def startIndex = failedTestJunitReportContent.lastIndexOf("${name}.html")
+        startIndex = failedTestJunitReportContent.indexOf("<td>", startIndex) +4
+        startIndex = failedTestJunitReportContent.indexOf("<td>", startIndex) +4
+        def endIndex = failedTestJunitReportContent.indexOf("</td>", startIndex)
+        failedTestJunitReportContent = failedTestJunitReportContent.substring(0, startIndex) + "${failures}" + failedTestJunitReportContent.substring(endIndex)
+        startIndex = failedTestJunitReportContent.indexOf("<td class=", startIndex) +10
+        endIndex = failedTestJunitReportContent.indexOf("</td>", startIndex)
+        failedTestJunitReportContent = failedTestJunitReportContent.substring(0, startIndex) + "\"failures\">${percent}%" + failedTestJunitReportContent.substring(endIndex)
+        return failedTestJunitReportContent
+    }
+
     doFirst {
 
         def failureScreenshotsDirectory = new File(reportsDirectory, 'failures')
@@ -311,11 +361,35 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
             return
         }
 
+        def indexJunitReportFile = new File(reportsDirectory, "index.html")
+        if (!indexJunitReportFile.exists()) {
+            println "Could not find JUnit report file for test class '${indexJunitReportFile}'"
+            return
+        }
+        def indexJunitReportContent = indexJunitReportFile.text
+
         failureScreenshotsDirectory.eachFile { failedTestClassDirectory ->
             def failedTestClassName = failedTestClassDirectory.name
+            def failedTestPackageName = failedTestClassName.substring(0,failedTestClassName.lastIndexOf("."))
+
+            def packageJunitReportFile = new File(reportsDirectory, "${failedTestPackageName}.html")
+            if (!packageJunitReportFile.exists()) {
+                println "Could not find JUnit report file for test class '${packageJunitReportFile}'"
+                return
+            }
+            def packageJunitReportContent = packageJunitReportFile.text
 
             failedTestClassDirectory.eachFile { failedTestFile ->
                 def failedTestName = failedTestFile.name
+
+                def failedTestClassJunitReportFile = new File(reportsDirectory, "${failedTestClassName}.html")
+                if (!failedTestClassJunitReportFile.exists()) {
+                    println "Could not find JUnit report file for test class '${failedTestClassJunitReportFile}'"
+                    return
+                }
+                def failedTestJunitReportContent = failedTestClassJunitReportFile.text
+
+                def failures = 0
 
                 failedTestFile.eachFile { failedTestCase ->
                     def failedTestCaseDescription = failedTestCase.name
@@ -328,63 +402,53 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
                         name += " (${failedTestCaseDescription.substring(pt2+1,pt3)})"
                     }
 
-                    def failedTestClassJunitReportFile = new File(reportsDirectory, "${failedTestClassName}.html")
-
-                    if (!failedTestClassJunitReportFile.exists()) {
-                        println "Could not find JUnit report file for test class '${failedTestClassJunitReportFile}'"
-                        return
-                    }
-
-                    def failedTestJunitReportContent = failedTestClassJunitReportFile.text
-
-                    def tab0 = "<a href=\"#tab0\">Tests</a>\n</li>\n</ul>\n<div id=\"tab0\" class=\"tab\">"
-                    def tab0Index = failedTestJunitReportContent.indexOf(tab0)
-
-                    if (tab0Index != -1) {
-                        def newtab0 = "<a href=\"#tab0\">Failed tests</a>\n</li>\n<li>\n<a href=\"#tab1\">Tests</a>\n</li>\n</ul>\n<div id=\"tab0\" class=\"tab\">\n<h2>Failed tests</h2>\n</div>\n<div id=\"tab1\" class=\"tab\">"
-                        failedTestJunitReportContent = failedTestJunitReportContent.replace(tab0, newtab0)
-                    }
+                    failedTestJunitReportContent = addFailedTestsHeader(failedTestJunitReportContent,"Tests")
+                    packageJunitReportContent = addFailedTestsHeader(packageJunitReportContent,"Classes")
+                    indexJunitReportContent = addFailedTestsHeader(indexJunitReportContent,"Classes")
 
                     def failedTest = "<h3 class=\"failures\">${failedTestName}</h3>"
                     def failedTestIndex = failedTestJunitReportContent.indexOf(failedTest)
                     def screenshotReport = ""
 
                     if (failedTestIndex == -1) {
-                        def newtestDiv = "<div class=\"test\">\n<a name=\"${failedTestName}\"></a>\n${failedTest}\n<span class=\"code\">\n<pre>\n</pre>\n</span>\n</div>"
-                        def endDiv = "</div>\n<div id=\"tab1\" class=\"tab\">"
+                        //test.html
+                        def newtestDiv = "<div class=\"test\">\n<a name=\"${failedTestName}\"></a>\n${failedTest}\n<span class=\"code\">\n<pre>\n</pre>\n</span>\n</div>\n"
+                        def endDiv = "</div>\n<div id=\"tab1\""
                         failedTestJunitReportContent = failedTestJunitReportContent.replace(endDiv, newtestDiv + endDiv)
                         failedTestJunitReportContent = failedTestJunitReportContent.replace("<td>${failedTestName}</td>\n<td class=\"success\">passed", "<td>${failedTestName}</td>\n<td class=\"failures\">failed")
 
-                        def totalCounterStr = "id=\"tests\">\n<div class=\"counter\">"
-                        def totalCounterStart = failedTestJunitReportContent.indexOf(totalCounterStr) + totalCounterStr.length()
-                        def totalCounterEnd = failedTestJunitReportContent.indexOf("</div>", totalCounterStart)
+                        def boxStr = "\"infoBox success\" id=\"successRate\""
+                        if (failedTestJunitReportContent.indexOf(boxStr) != -1) {
+                            failedTestJunitReportContent = failedTestJunitReportContent.replace(boxStr, "\"infoBox failures\" id=\"successRate\"")
+                        }
 
-                        def failureCounterStr = "id=\"failures\">\n<div class=\"counter\">"
-                        def failureCounterStart = failedTestJunitReportContent.indexOf(failureCounterStr, totalCounterEnd) + failureCounterStr.length()
-                        def failureCounterEnd = failedTestJunitReportContent.indexOf("</div>", failureCounterStart)
+                        //package.html
+                        newtestDiv = "<tr>\n<td class=\"failures\">\n<a href=\"${failedTestClassName}.html\">${failedTestClassName.substring(failedTestClassName.lastIndexOf(".")+1)}</a>\n</td>\n"
+                        newtestDiv += "<td class=\"failures\">\n<a href=\"${failedTestClassName}.html#${failedTestName}\">${failedTestName}</a>\n</td>\n</tr>\n"
+                        endDiv = "</table>\n</ul>\n</div>\n<div id=\"tab1\""
+                        packageJunitReportContent = packageJunitReportContent.replace(endDiv, newtestDiv + endDiv)
 
-                        def percentInfoStr = "id=\"successRate\">\n<div class=\"percent\">"
-                        def percentInfoStart = failedTestJunitReportContent.indexOf(percentInfoStr, failureCounterEnd) + percentInfoStr.length()
-                        def percentInfoEnd = failedTestJunitReportContent.indexOf("%</div>", percentInfoStart)
+                        if (packageJunitReportContent.indexOf(boxStr) != -1) {
+                            packageJunitReportContent = packageJunitReportContent.replace(boxStr, "\"infoBox failures\" id=\"successRate\"")
+                        }
 
-                        def total = failedTestJunitReportContent.substring(totalCounterStart, totalCounterEnd).toInteger()
-                        def failure = failedTestJunitReportContent.substring(failureCounterStart, failureCounterEnd).toInteger() + 1
-                        def percent = ((1 - failure / total) * 100).toInteger()
+                        //index.html
+                        newtestDiv = "<tr>\n<td class=\"failures\">\n<a href=\"${failedTestClassName}.html\">${failedTestClassName.substring(failedTestClassName.lastIndexOf(".")+1)}</a>\n</td>\n"
+                        newtestDiv += "<td class=\"failures\">\n<a href=\"${failedTestClassName}.html#${failedTestName}\">${failedTestName}</a>\n</td>\n</tr>\n"
+                        endDiv = "</table>\n</ul>\n</div>\n<div id=\"tab1\""
+                        indexJunitReportContent = indexJunitReportContent.replace(endDiv, newtestDiv + endDiv)
 
-                        failedTestJunitReportContent = failedTestJunitReportContent.substring(0, failureCounterStart) + "$failure" + failedTestJunitReportContent.substring(failureCounterEnd)
-                        failedTestJunitReportContent = failedTestJunitReportContent.substring(0, percentInfoStart) + "$percent" + failedTestJunitReportContent.substring(percentInfoEnd)
-
-                        if (failedTestJunitReportContent.indexOf("\"infoBox success\" id=\"successRate\"") != -1) {
-                            failedTestJunitReportContent = failedTestJunitReportContent.replace("\"infoBox success\" id=\"successRate\"", "\"infoBox failures\" id=\"successRate\"")
+                        if (indexJunitReportContent.indexOf(boxStr) != -1) {
+                            indexJunitReportContent = indexJunitReportContent.replace(boxStr, "\"infoBox failures\" id=\"successRate\"")
                         }
 
                         failedTestIndex = failedTestJunitReportContent.indexOf(failedTest)
+                        failures += 1
                     } else screenshotReport = "\n\n"
 
                     def imagesrc = new File("failures", failedTestClassName + File.separator + failedTestName + File.separator + failedTestCaseDescription).toString()
 
-                    screenshotReport += "display conficts detected with \'${name}\' line ${line}:\n"
-                    screenshotReport += "<img src=\"${imagesrc}\" width =\"800\" />\n"
+                    screenshotReport += "display conficts detected with \'${name}\' line ${line}:\n<img src=\"${imagesrc}\" width =\"800\" />\n"
 
                     def insertIndex = failedTestJunitReportContent.indexOf("</pre>", failedTestIndex)
                     def firstPart = failedTestJunitReportContent.substring(0, insertIndex)
@@ -392,6 +456,26 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
                     failedTestJunitReportContent = firstPart + screenshotReport + secondPart
 
                     failedTestClassJunitReportFile.write(failedTestJunitReportContent)
+                }
+
+                if (failures != 0) {
+                    failedTestJunitReportContent = failedTestJunitReportContent.replace("<td>${failedTestName}</td>\n<td class=\"success\">passed", "<td>${failedTestName}</td>\n<td class=\"failures\">failed")
+                    def classSummaryValues = updateSummaryValues(failedTestJunitReportContent,failures)
+                    def packageSummaryValues = updateSummaryValues(packageJunitReportContent,failures)
+                    def indexSummaryValues = updateSummaryValues(indexJunitReportContent,failures)
+                    failedTestJunitReportContent = classSummaryValues[0]
+                    packageJunitReportContent = packageSummaryValues[0]
+                    indexJunitReportContent = indexSummaryValues[0]
+
+                    packageJunitReportContent = updateRecapValues(packageJunitReportContent,failedTestClassName,classSummaryValues[1],classSummaryValues[2],"")
+                    indexJunitReportContent = updateRecapValues(indexJunitReportContent,failedTestClassName,classSummaryValues[1],classSummaryValues[2],"/")
+                    indexJunitReportContent = updateRecapValues(indexJunitReportContent,failedTestPackageName,packageSummaryValues[1],packageSummaryValues[2],"")
+
+                    failedTestClassJunitReportFile.write(failedTestJunitReportContent)
+                    packageJunitReportFile.write(packageJunitReportContent)
+                    indexJunitReportFile.write(indexJunitReportContent)
+
+
                 }
             }
         }
