@@ -40,9 +40,9 @@ job-android-uitests:
     #launch emulator
     - ${ANDROID_HOME}/platform-tools/adb start-server
     - ${ANDROID_HOME}/emulator/emulator -avd $emulator_name -port $emulator_adb_port &
-    - .gitlab-ci-files/wait-for-android-emulator
+    - .gitlab-ci-files/wait-for-android-emulator -d emulator-$emulator_adb_port
 
-    - ${ANDROID_HOME}/platform-tools/adb logcat -d > logs/logcats.log
+    - ${ANDROID_HOME}/platform-tools/adb -s emulator-$emulator_adb_port logcat -d > logs/logcats.log
 
   script:
     - set +e
