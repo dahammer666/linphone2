@@ -57,7 +57,7 @@ job-android-uitests:
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-$emulator_adb_port emu kill 
     - ${ANDROID_HOME}/platform-tools/adb kill-server
 
-    - if [ $BUILD_RESULT -eq 0 ] || [ ! -d app/build/reports/androidTests/connected/failures ]; then exit 0; else exit 1; fi
+    - if [ $BUILD_RESULT -eq 0 ] && [ ! -d app/build/reports/androidTests/connected/failures ]; then exit 0; else exit 1; fi
 
   after_script:
     #artifacts preparation
