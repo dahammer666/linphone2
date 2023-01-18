@@ -12,6 +12,7 @@ variables:
   android_system_image: "system-images;android-$android_api;google_$emulator_type;$system_architecture" # 'sdkmanager --list | grep system-images' to have all existing configs
   emulator_device: "pixel_6"
   emulator_name: "$emulator_device-api_$android_api-google_$emulator_type-arch_$system_architecture"
+  emulator_adb_port: "5556" # max recommended 5586
 
 
 job-android-uitests:
@@ -25,27 +26,44 @@ job-android-uitests:
   before_script:
     - git submodule update --init --recursive
     - mkdir logs && mkdir reports && mkdir apks
+
+    #define adb tcp port
+    - RUNNING_DEVICES=$(${ANDROID_HOME}/platform-tools/adb devices)
+    - while [[ $RUNNING_DEVICES  == *$emulator_adb_port* ]]; do; emulator_adb_port=$(($emulator_adb_port + 2)); done
+    - if [ $emulator_adb_port -gt 5586]; then; echo "|warning| the 15 recommended ports are already used by other emulators. ADB may not function properly for this emulator"; fi
+    - emulator_name=$emulator_name-$emulator_adb_port
+
+    #install emulator system-image and create it
     - ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "$android_system_image" > logs/emulatorSystemImageInstallation.log
     - echo no | ${ANDROID_HOME}/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name $emulator_name --package $android_system_image --tag google_$emulator_type --abi $system_architecture --device $emulator_device > logs/emulatorCreation.log
+
+    #launch emulator
     - ${ANDROID_HOME}/platform-tools/adb start-server
-    - ${ANDROID_HOME}/emulator/emulator -avd $emulator_name &
+    - ${ANDROID_HOME}/emulator/emulator -avd $emulator_name -port $emulator_adb_port &
     - .gitlab-ci-files/wait-for-android-emulator
+
     - ${ANDROID_HOME}/platform-tools/adb logcat -d > logs/logcats.log
 
   script:
     - set +e
+
+    #launch uitest suite
     - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.testsuites.CallTestSuite -PscreportWindowed=false connectedAndroidTest --continue
     - export BUILD_RESULT=$?
+
+    #kill emultator (twice in case a confirm dialog popup appears)
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
-    - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill #in case a confirm dialog popup appears
+    - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill 
     - ${ANDROID_HOME}/platform-tools/adb kill-server
+
     - if [$BUILD_RESULT -eq 0] || [ ! -d app/build/reports/androidTests/connected/failures ]; then exit 0; else exit 1; fi
 
   after_script:
+    #artifacts preparation
     - mv app/build/reports/androidTests/connected/* reports
-	- mv app/build/outputs/apk/debug/linphone-android-debug-*.apk ./apks/debug
+    - mv app/build/outputs/apk/debug/linphone-android-debug-*.apk ./apks/debug
     - mv app/build/outputs/apk/release/linphone-android-release-*.apk ./apks/release
-    - python3 .gitlab-ci-files/html2xml-report.py -p reports
+    - .gitlab-ci-files/html2xml-report -p reports
     
   artifacts:
     paths:
