@@ -30,7 +30,7 @@ job-android-uitests:
     #define adb tcp port
     - RUNNING_DEVICES=$(${ANDROID_HOME}/platform-tools/adb devices)
     - while [[ $RUNNING_DEVICES  == *$emulator_adb_port* ]]; do; emulator_adb_port=$(($emulator_adb_port + 2)); done
-    - if [ $emulator_adb_port -gt 5586]; then; echo "|warning| the 15 recommended ports are already used by other emulators. ADB may not function properly for this emulator"; fi
+    - if [ $emulator_adb_port -gt 5586 ]; then; echo "|warning| the 15 recommended ports are already used by other emulators. ADB may not function properly for this emulator"; fi
     - emulator_name=$emulator_name-$emulator_adb_port
 
     #install emulator system-image and create it
