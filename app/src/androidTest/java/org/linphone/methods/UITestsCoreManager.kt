@@ -16,7 +16,7 @@ class UITestsCoreManager {
 
     var appAccountAuthInfo: AuthInfo
     var ghostAccounts: UITestsGhostAccounts
-    val dnsServer = arrayOf("51.255.123.121")
+    val dnsServer = arrayOf("51.255.123.121") // fs-test-3 = 5.135.31.162 and fs-test-4 = 51.255.123.121
 
     companion object {
         private var mInstance: UITestsCoreManager? = null
