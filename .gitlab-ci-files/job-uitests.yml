@@ -64,6 +64,9 @@ job-android-uitests:
     - mv app/build/outputs/apk/debug/linphone-android-debug-*.apk ./apks/debug
     - mv app/build/outputs/apk/release/linphone-android-release-*.apk ./apks/release
     - .gitlab-ci-files/html2xml-report -p reports
+
+    #delete emulator
+    - ${ANDROID_HOME}/cmdline-tools/latest/bin/avdmanager --verbose delete avd --name $emulator_name > logs/emulatorDeletion.log
     
   artifacts:
     paths:
