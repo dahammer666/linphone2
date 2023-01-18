@@ -5,8 +5,8 @@ set +e
 bootanim=""
 failcounter=0
 
-adb=`${ANDROID_HOME}/platform-tools/adb`
-device=`emulator-5554`
+adb="${ANDROID_HOME}/platform-tools/adb"
+device="emulator-5554"
 timeout_in_sec=360
 
 while getopts a:t:d flag; do
