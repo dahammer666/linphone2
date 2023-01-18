@@ -1,15 +1,24 @@
 #!/bin/bash
 
-# Originally written by Ralf Kistner <ralf@embarkmobile.com>, but placed in the public domain
-
 set +e
 
 bootanim=""
 failcounter=0
+
+adb=`${ANDROID_HOME}/platform-tools/adb`
+device=`emulator-5554`
 timeout_in_sec=360
 
+while getopts a:t:d flag; do
+  case "${flag}" in
+      a) adb=${OPTARG};;
+      d) device=${OPTARG};;
+      t) timeout_in_sec=${OPTARG};;
+  esac
+done
+
 until [[ "$bootanim" =~ "stopped" ]]; do
-  bootanim=`${ANDROID_HOME}/platform-tools/adb -e shell getprop init.svc.bootanim 2>&1 &`
+  bootanim=`$adb -s $device -e shell getprop init.svc.bootanim 2>&1 &`
   if [[ "$bootanim" =~ "device not found" || "$bootanim" =~ "device offline"
     || "$bootanim" =~ "running" ]]; then
     let "failcounter += 1"
