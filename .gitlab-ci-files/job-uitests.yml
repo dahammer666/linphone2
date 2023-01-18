@@ -48,6 +48,7 @@ job-android-uitests:
     - set +e
 
     #launch uitest suites
+    - export JAVA_HOME=`/usr/libexec/java_home -v 11`
     - ANDROID_SERIAL=emulator-$emulator_adb_port 
     - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.testsuites.CallTestSuite -PscreportWindowed=false connectedAndroidTest --continue
     - export BUILD_RESULT=$?
