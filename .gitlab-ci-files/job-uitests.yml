@@ -53,8 +53,8 @@ job-android-uitests:
     - export BUILD_RESULT=$?
 
     #kill emultator (twice in case a confirm dialog popup appears)
-    - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill
-    - ${ANDROID_HOME}/platform-tools/adb -s emulator-5554 emu kill 
+    - ${ANDROID_HOME}/platform-tools/adb -s emulator-$emulator_adb_port emu kill
+    - ${ANDROID_HOME}/platform-tools/adb -s emulator-$emulator_adb_port emu kill 
     - ${ANDROID_HOME}/platform-tools/adb kill-server
 
     - if [ $BUILD_RESULT -eq 0 ] || [ ! -d app/build/reports/androidTests/connected/failures ]; then exit 0; else exit 1; fi
