@@ -3,8 +3,8 @@ job-android-upload:
   stage: deploy
   tags: [ "deploy" ]
 
-  only:
-    - schedules
+  #only:
+    #- schedules
   dependencies:
     - job-android
 
