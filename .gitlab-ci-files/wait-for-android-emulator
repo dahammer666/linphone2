@@ -7,31 +7,50 @@ failcounter=0
 
 adb="${ANDROID_HOME}/platform-tools/adb"
 device="emulator-5554"
+mode="start"
 timeout_in_sec=360
 
-while getopts a:d:t flag; do
+while getopts a:d:m:t flag; do
   case "${flag}" in
-      a) adb=${OPTARG};;
-      d) device=${OPTARG};;
-      t) timeout_in_sec=${OPTARG};;
+    a) adb=${OPTARG};;
+    d) device=${OPTARG};;
+    m) mode=${OPTARG};;
+    t) timeout_in_sec=${OPTARG};;
   esac
 done
 
-until [[ "$bootanim" =~ "stopped" ]]; do
-  bootanim=`$adb -s $device -e shell getprop init.svc.bootanim 2>&1 &`
-  if [[ "$bootanim" =~ "device '$device' not found" || "$bootanim" =~ "device '$device' offline"
-    || "$bootanim" =~ "running" ]]; then
-    let "failcounter += 1"
-    if [[ $failcounter = 1 ]]; then
-      echo -n "Waiting for $device to start"; else
-      echo -n "."
-    fi
-    if [[ $failcounter -gt timeout_in_sec ]]; then
-      echo "Timeout ($timeout_in_sec seconds) reached; failed to start emulator"
-      exit 1
-    fi
-  fi
-  sleep 1
-done
+case "${mode}" in
 
-echo "$device is ready"
+  start)
+    until [[ "$bootanim" =~ "stopped" ]]; do
+      bootanim=$($adb -s $device -e shell getprop init.svc.bootanim 2>&1 &)
+      if [[ "$bootanim" =~ "device '$device' not found" || "$bootanim" =~ "device offline" || "$bootanim" =~ "running" ]]; then
+        let "failcounter += 1"
+        if [[ $failcounter = 1 ]]; then
+          echo -n "Waiting for $device to start"; else
+          echo -n "."
+        fi
+        if [[ $failcounter -gt timeout_in_sec ]]; then
+          echo "Timeout ($timeout_in_sec seconds) reached; failed to start emulator"
+          exit 1
+        fi
+      fi
+      sleep 1
+    done
+    echo "$device is ready"
+    ;;
+
+  stop)
+    while $adb devices | grep -q "$device"; do
+      let "failcounter += 1"
+      if [[ $failcounter = 1 ]]; then
+        echo -n "Waiting for $device to stop"; else
+        echo -n "."
+      fi
+      sleep 1
+    done
+
+    echo "$device is off"
+    ;;
+
+esac
