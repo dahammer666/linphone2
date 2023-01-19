@@ -42,7 +42,8 @@ for file in classNames:
         testName = testTd.text
         testTd.decompose()
         testState = test.find("td")["class"][0]
-        testTime = float(test.find("td").text.split("(")[1].split("s")[0])
+        testTime = test.find("td").text.split("(")[1].split("s")[0].split("m")
+        testTime = float(testTime[0]) if len(testTime) < 2 else int(testTime[0])*60 + float(testTime[1])
         Tests[fileName][testName] = [testState,testTime,None,None]
 
     try:

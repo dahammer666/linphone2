@@ -11,11 +11,11 @@
 
 include:
   - '.gitlab-ci-files/job-android.yml'
-  - '.gitlab-ci-files/job-uitests.yml'
   - '.gitlab-ci-files/job-upload.yml'
+  - '.gitlab-ci-files/job-uitests.yml'
 
 
 stages:
- - build
- - uitests
- - deploy
+  - build
+  - deploy
+  - uitests

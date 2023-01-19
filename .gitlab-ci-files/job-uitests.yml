@@ -19,13 +19,12 @@ job-android-uitests:
 
   stage: uitests
   tags: [ "macos-xcode13" ]
-  allow_failure: true
 
   dependencies:
     - job-android
 
   before_script:
-    - git submodule update --init --recursive
+    - git submodule update --init
     - mkdir logs && mkdir reports && mkdir apks
 
     #define adb tcp port
@@ -39,19 +38,19 @@ job-android-uitests:
 
     #launch emulator
     - ${ANDROID_HOME}/platform-tools/adb start-server
-    - ${ANDROID_HOME}/emulator/emulator -avd $emulator_name -port $emulator_adb_port -no-window -no-audio >> logs/emulator.log 2>&1 &
+    - ${ANDROID_HOME}/emulator/emulator -avd $emulator_name -port $emulator_adb_port -no-audio >> logs/emulator.log 2>&1 &
     - .gitlab-ci-files/wait-for-android-emulator -d emulator-$emulator_adb_port -m start
-
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-$emulator_adb_port logcat -d > logs/logcats.log
 
   script:
     - set +e
 
     #launch uitest suites
-    - export JAVA_HOME=`/usr/libexec/java_home -v 11`
-    - export ANDROID_SERIAL=emulator-$emulator_adb_port 
+    - export JAVA_HOME=$(/usr/libexec/java_home -v 11)
+    - export ANDROID_SERIAL=emulator-$emulator_adb_port
+    - ${ANDROID_HOME}/platform-tools/adb -s emulator-$emulator_adb_port logcat -c
     - ./gradlew -Pandroid.testInstrumentationRunnerArguments.class=org.linphone.testsuites.CallTestSuite -PscreportWindowed=false connectedAndroidTest --continue 2>&1 | tee logs/build.log
-    - BUILD_RESULT=$?
+    - ${ANDROID_HOME}/platform-tools/adb -s emulator-$emulator_adb_port logcat -d > logs/logcats.log
 
     #kill emultator (twice in case a confirm dialog popup appears)
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-$emulator_adb_port emu kill
@@ -62,12 +61,13 @@ job-android-uitests:
     - ${ANDROID_HOME}/cmdline-tools/latest/bin/avdmanager --verbose delete avd --name $emulator_name >> logs/emulator.log
     - if ${ANDROID_HOME}/platform-tools/adb devices | grep -q "emulator-"; then ${ANDROID_HOME}/platform-tools/adb kill-server; fi
 
-    - if [ $BUILD_RESULT -eq 0 ] && ! grep -q "BUILD FAILED" logs/build.log && [ ! -d app/build/reports/androidTests/connected/failures ]; then exit 0; else exit 1; fi
+    - if grep -q "BUILD FAILED" logs/build.log || [ -d app/build/reports/androidTests/connected/failures ]; then exit 1; else exit 0; fi
 
   after_script:
     #artifacts preparation
-    - mv app/build/outputs/apk/debug/linphone-android-debug-*.apk ./apks/debug
-    - mv app/build/outputs/apk/release/linphone-android-release-*.apk ./apks/release
+    - mkdir apks/debug && apks/release
+    - mv app/build/outputs/apk/debug/linphone-android-debug-*.apk apks/debug
+    - mv app/build/outputs/apk/release/linphone-android-release-*.apk apks/release
     - mv app/build/reports/androidTests/connected/* reports
     - .gitlab-ci-files/html2xml-report -p reports
     

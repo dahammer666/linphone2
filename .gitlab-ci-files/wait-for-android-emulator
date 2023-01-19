@@ -27,7 +27,7 @@ case "${mode}" in
       if [[ "$bootanim" =~ "device '$device' not found" || "$bootanim" =~ "device offline" || "$bootanim" =~ "running" ]]; then
         let "failcounter += 1"
         if [[ $failcounter = 1 ]]; then
-          echo -n "Waiting for $device to start"; else
+          echo -n "Waiting for $device to start."; else
           echo -n "."
         fi
         if [[ $failcounter -gt timeout_in_sec ]]; then
@@ -44,7 +44,7 @@ case "${mode}" in
     while $adb devices | grep -q "$device"; do
       let "failcounter += 1"
       if [[ $failcounter = 1 ]]; then
-        echo -n "Waiting for $device to stop"; else
+        echo -n "Waiting for $device to stop."; else
         echo -n "."
       fi
       sleep 1
