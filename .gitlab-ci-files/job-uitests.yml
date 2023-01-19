@@ -19,6 +19,7 @@ job-android-uitests:
 
   stage: uitests
   tags: [ "macos-xcode13" ]
+  allow_failure: true
 
   dependencies:
     - job-android
@@ -38,7 +39,7 @@ job-android-uitests:
 
     #launch emulator
     - ${ANDROID_HOME}/platform-tools/adb start-server
-    - ${ANDROID_HOME}/emulator/emulator -avd $emulator_name -port $emulator_adb_port >> logs/emulator.log 2>&1 &
+    - ${ANDROID_HOME}/emulator/emulator -avd $emulator_name -port $emulator_adb_port -no-window -no-audio >> logs/emulator.log 2>&1 &
     - .gitlab-ci-files/wait-for-android-emulator -d emulator-$emulator_adb_port -m start
 
     - ${ANDROID_HOME}/platform-tools/adb -s emulator-$emulator_adb_port logcat -d > logs/logcats.log

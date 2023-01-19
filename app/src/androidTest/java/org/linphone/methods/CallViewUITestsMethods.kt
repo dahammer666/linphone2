@@ -30,6 +30,8 @@ object CallViewUITestsMethods {
     var appAccountAuthInfo: AuthInfo = UITestsCoreManager.instance.appAccountAuthInfo
     var ghostAccount: UITestsRegisteredLinphoneCore = UITestsCoreManager.instance.ghostAccounts[0]
 
+    var callTimeChecker: Job? = null
+
     fun refreshAccountInfo() {
         appAccountAuthInfo = UITestsCoreManager.instance.appAccountAuthInfo
         ghostAccount = UITestsCoreManager.instance.ghostAccounts[0]
@@ -51,10 +53,11 @@ object CallViewUITestsMethods {
         onView(withContentDescription(R.string.content_description_start_call)).perform(click())
 
         onView(withId(R.id.outgoing_call_layout)).checkWithTimeout(matches(isDisplayed()), 5.0)
-        checkCallTime(onView(withId(R.id.outgoing_call_timer)))
+        callTimeChecker = checkCallTime(onView(withId(R.id.outgoing_call_timer)))
     }
 
     fun endCall(currentView: ViewInteraction? = null) {
+        runBlocking { callTimeChecker?.join() }
         if (ghostAccount.callState == Call.State.Released) { return }
 
         ghostAccount.terminateCall()
@@ -75,7 +78,7 @@ object CallViewUITestsMethods {
                 }
                 delay(1000)
             }
-            assert(timerArray.distinct().size >= 2) { "[UITests] Call Time is not correctly incremented, less than 2 differents values are displayed in 3 seconds" }
+            assert(timerArray.distinct().size >= 2) { "[UITests] Call Time is not correctly incremented, less than 2 different values are displayed in 3 seconds" }
             assert(timerArray == timerArray.sorted()) { "[UITests] Call Time is not correctly incremented, it is not increasing" }
             assert(timerArray.first() <= firstValue + 3) { "[UITests] Call Time is not correctly initialized, it is at ${timerArray.first()}, $firstValue seconds after the start)" }
         }

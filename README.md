@@ -169,6 +169,20 @@ We no longer use transifex for the translation process, instead we have deployed
 
 Due to the full app rewrite we can't re-use previous translations, so we'll be very happy if you want to contribute.
 
+# Instrumented UI tests
+
+Linphone-Android UI Tests include screenshot comparison with the git submodule [`screport`](https://gitlab.linphone.org/BC/public/screport/-/tree/main). The project must be cloned with the `--recursive` option. After updating or switching branches, never forget to checkout and update the submodules with:
+
+    git submodule update --init
+
+If you have Android Studio, simply open the project and run Instrumented UI tests.
+
+If you don't have Android Studio, you can run :
+
+    ./gradlew connectedAndroidTest                            
+
+Android Instrumented UI tests wiki : https://wiki.linphone.org/xwiki/wiki/public/view/Linphone/
+
 # CONTRIBUTIONS
 
 In order to submit a patch for inclusion in linphone's source code:
