@@ -65,7 +65,7 @@ job-android-uitests:
 
   after_script:
     #artifacts preparation
-    - mkdir apks/debug && apks/release
+    - mkdir apks/debug && mkdir apks/release
     - mv app/build/outputs/apk/debug/linphone-android-debug-*.apk apks/debug
     - mv app/build/outputs/apk/release/linphone-android-release-*.apk apks/release
     - mv app/build/reports/androidTests/connected/* reports
