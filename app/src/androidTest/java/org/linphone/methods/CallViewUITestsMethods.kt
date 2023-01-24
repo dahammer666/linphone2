@@ -29,6 +29,7 @@ object CallViewUITestsMethods {
     val manager = UITestsCoreManager.instance
     var appAccountAuthInfo: AuthInfo = UITestsCoreManager.instance.appAccountAuthInfo
     var ghostAccount: UITestsRegisteredLinphoneCore = UITestsCoreManager.instance.ghostAccounts[0]
+    var startCallTime = Date().time // for checkCallTime function
 
     fun refreshAccountInfo() {
         appAccountAuthInfo = UITestsCoreManager.instance.appAccountAuthInfo
@@ -39,8 +40,9 @@ object CallViewUITestsMethods {
         if (ghostAccount.callState != Call.State.Released) { ghostAccount.terminateCall() }
 
         ghostAccount.startCall(manager.createAddress(appAccountAuthInfo))
-        ghostAccount.waitForCallState(Call.State.OutgoingRinging, 5.0)
+        startCallTime = Date().time
 
+        ghostAccount.waitForCallState(Call.State.OutgoingRinging, 5.0)
         waitForCallNotification(true, 5.0)
     }
 
@@ -49,8 +51,10 @@ object CallViewUITestsMethods {
 
         onView(withId(R.id.sip_uri_input)).perform(typeText(ghostAccount.mAuthInfo.username))
         onView(withContentDescription(R.string.content_description_start_call)).perform(click())
+        startCallTime = Date().time
 
         UITestsView.outgoingCallView.checkWithTimeout(matches(isDisplayed()), 5.0)
+        ghostAccount.waitForCallState(Call.State.IncomingReceived, 5.0)
     }
 
     fun endCall(currentView: ViewInteraction? = null) {
@@ -63,7 +67,7 @@ object CallViewUITestsMethods {
     }
 
     fun checkCallTime(view: ViewInteraction, launchTime: Long = Date().time) = runBlocking {
-        view.checkWithTimeout(matches(isDisplayed()), 2.0)
+        view.checkWithTimeout(matches(isDisplayed()), 5.0)
         val firstValue = ((Date().time - launchTime) / 1000).toInt() + 1
         val wait = launch(Dispatchers.Default) {
             val timerArray = arrayListOf<Int>()

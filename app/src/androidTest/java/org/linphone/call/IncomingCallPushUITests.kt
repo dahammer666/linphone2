@@ -2,7 +2,6 @@ package org.linphone.call
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.rule.GrantPermissionRule
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -20,10 +19,7 @@ class IncomingCallPushUITests {
     val methods = CallViewUITestsMethods
 
     @get:Rule
-    val screenshotsRule = ScreenshotsRule(true)
-
-    @get:Rule
-    var mGrantPermissionRule = GrantPermissionRule.grant(*LinphonePermissions.CALL)
+    val linphoneUITestRule = LinphoneUITestRule(LinphonePermissions.CALL, true, 2)
 
     @Before
     fun setUp() {

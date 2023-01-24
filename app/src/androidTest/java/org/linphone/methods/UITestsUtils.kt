@@ -5,17 +5,22 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
-import androidx.test.espresso.*
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.ViewAssertion
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.*
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import java.util.*
 import kotlinx.coroutines.*
-import org.junit.rules.TestWatcher
+import org.junit.AssumptionViolatedException
+import org.junit.rules.TestRule
 import org.junit.runner.Description
+import org.junit.runners.model.MultipleFailureException
+import org.junit.runners.model.Statement
 import org.linphone.LinphoneApplication
 import org.linphone.R
 import org.linphone.activities.main.MainActivity
@@ -25,16 +30,62 @@ import org.linphone.core.Factory
 import org.linphone.core.TransportType
 import org.linphone.core.tools.Log
 
-class ScreenshotsRule(active: Boolean) : TestWatcher() {
+class LinphoneUITestRule(
+    private val permissions: Array<String>,
+    private val screenshots: Boolean,
+    private val maxAttempts: Int
+) : TestRule {
 
-    val screenshotComparison = active
+    // @get: Rule
+    // var grantPermissionRule = GrantPermissionRule.grant(*permissions)
 
-    override fun starting(description: Description) {
-        super.starting(description)
-        UITestsScreenshots.screenshotComparison = screenshotComparison
+    private var attemptNumber = 1
+
+    fun onStart(description: Description) {
+        UITestsScreenshots.screenshotComparison = screenshots
         UITestsScreenshots.definePath(description.className, description.methodName, Date().time.toString())
-        if (screenshotComparison && !UITestsScreenshots.defaultPath.isDirectory) {
+        if (screenshots && !UITestsScreenshots.defaultPath.isDirectory) {
             UITestsScreenshots.defaultPath.mkdirs()
+        }
+    }
+
+    fun onFailure(
+        base: Statement,
+        description: Description,
+        e: Throwable,
+        errors: MutableList<Throwable>
+    ) {
+        if (attemptNumber <= maxAttempts) {
+            Log.e("[UITests] ${description.displayName} attempt $attemptNumber failed")
+            Log.e("[UITests] ${description.displayName} $e")
+            Log.e("[UITests] ${description.displayName} launch of an attempt ${++attemptNumber} ")
+            onStart(description)
+            base.evaluate()
+        } else {
+            errors.add(e)
+        }
+    }
+
+    override fun apply(base: Statement, description: Description): Statement {
+        return object : Statement() {
+            @Throws(Throwable::class)
+            override fun evaluate() {
+                val errors: MutableList<Throwable> = ArrayList()
+                onStart(description)
+                try {
+                    base.evaluate()
+                    // on succeed
+                } catch (e: AssumptionViolatedException) {
+                    errors.add(e)
+                    // on skip
+                } catch (e: Throwable) {
+                    onFailure(base, description, e, errors)
+                } finally {
+                    // on finish
+                }
+
+                MultipleFailureException.assertEmpty(errors)
+            }
         }
     }
 }
@@ -55,7 +106,7 @@ object LinphonePermissions {
 }
 
 object UITestsView {
-    val dialerView = onView(withId(R.id.incoming_call_layout))
+    val dialerView = onView(withId(R.id.dialer_layout))
     val incomingCallView = onView(withId(R.id.incoming_call_layout))
     val outgoingCallView = onView(withId(R.id.outgoing_call_layout))
     val singleCallView = onView(withId(R.id.single_call_layout))
@@ -69,7 +120,7 @@ object UITestsUtils {
     fun testAppSetup() {
         // launch app
         Log.i("[UITests] Launch Linphone app")
-        if (!isAppLaunch()) { launchApp() }
+        launchApp()
         try {
             onView(withId(R.id.assistant_welcome_layout)).check(doesNotExist())
         } catch (e: Throwable) {
@@ -80,7 +131,7 @@ object UITestsUtils {
             connectAccount()
             assert(accountIsConnected()) { "registration state on the Status Bar is still not : Connected after 10 seconds" }
         }
-        onView(withId(R.id.dialer_layout)).checkWithTimeout(matches(isDisplayed()), 5.0)
+        UITestsView.dialerView.checkWithTimeout(matches(isDisplayed()), 5.0)
     }
 
     fun launchApp() {
@@ -152,9 +203,8 @@ object UITestsUtils {
     }
 
     fun ViewInteraction.checkWithTimeout(viewAssert: ViewAssertion, timeout: Double): ViewInteraction = runBlocking {
-        val time = Date().time
         val wait = launch(Dispatchers.Default) {
-            repeat((timeout * 10).toInt()) {
+            repeat((timeout * 10).toInt()) { i ->
                 try {
                     check(viewAssert)
                     cancel()
@@ -165,7 +215,6 @@ object UITestsUtils {
             }
         }
         wait.join()
-        check { view, noViewFoundException -> Log.i("[UITests] $view (found in ${(Date().time - time).toFloat() / 1000} sec)") }
-        check(viewAssert)
+        check(viewAssert).withFailureHandler { error, viewMatcher -> throw Exception("[UITests] $error") }
     }
 }

@@ -7,7 +7,6 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.rule.GrantPermissionRule
 import java.util.*
 import org.junit.After
 import org.junit.Before
@@ -25,13 +24,9 @@ import org.linphone.utils.AppUtils.Companion.getString
 class IncomingCallUITests {
 
     val methods = CallViewUITestsMethods
-    var time = Date().time // to pass time value between setup and test function for call timer check
 
     @get:Rule
-    val screenshotsRule = ScreenshotsRule(true)
-
-    @get:Rule
-    var mGrantPermissionRule = GrantPermissionRule.grant(*LinphonePermissions.CALL)
+    val linphoneUITestRule = LinphoneUITestRule(LinphonePermissions.CALL, true, 2)
 
     @Before
     fun setUp() {
@@ -39,7 +34,6 @@ class IncomingCallUITests {
         methods.refreshAccountInfo()
         takeScreenshot("dialer_view")
         methods.startIncomingCall()
-        time = Date().time
         methods.onPushAction(getString(R.string.incoming_call_notification_title), UITestsView.incomingCallView)
         takeScreenshot("incoming_call_view")
     }
@@ -51,7 +45,7 @@ class IncomingCallUITests {
 
     @Test
     fun testViewDisplay() {
-        methods.checkCallTime(onView(ViewMatchers.withId(R.id.outgoing_call_timer)), time)
+        methods.checkCallTime(onView(ViewMatchers.withId(R.id.incoming_call_timer)), methods.startCallTime)
         methods.endCall(UITestsView.incomingCallView)
         takeScreenshot("dialer_view")
     }

@@ -6,7 +6,6 @@ import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.rule.GrantPermissionRule
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -24,10 +23,7 @@ class OutgoingCallUITests {
     val methods = CallViewUITestsMethods
 
     @get:Rule
-    val screenshotsRule = ScreenshotsRule(true)
-
-    @get:Rule
-    var mGrantPermissionRule = GrantPermissionRule.grant(*LinphonePermissions.CALL)
+    val linphoneUITestRule = LinphoneUITestRule(LinphonePermissions.CALL, true, 2)
 
     @Before
     fun setUp() {
@@ -45,7 +41,7 @@ class OutgoingCallUITests {
 
     @Test
     fun testViewDisplay() {
-        methods.checkCallTime(onView(withId(R.id.outgoing_call_timer)))
+        methods.checkCallTime(onView(withId(R.id.outgoing_call_timer)), methods.startCallTime)
         methods.endCall(UITestsView.outgoingCallView)
         takeScreenshot("dialer_view", "declined")
     }
@@ -62,7 +58,7 @@ class OutgoingCallUITests {
         takeScreenshot("outgoing_call_view", "mute")
         onView(withId(R.id.microphone)).perform(click())
         takeScreenshot("outgoing_call_view")
-        methods.endCall()
+        methods.endCall(UITestsView.outgoingCallView)
         takeScreenshot("dialer_view", "declined")
     }
 
@@ -72,7 +68,7 @@ class OutgoingCallUITests {
         takeScreenshot("outgoing_call_view", "speaker")
         onView(withId(R.id.speaker)).perform(click())
         takeScreenshot("outgoing_call_view")
-        methods.endCall()
+        methods.endCall(UITestsView.outgoingCallView)
         takeScreenshot("dialer_view", "declined")
     }
 
