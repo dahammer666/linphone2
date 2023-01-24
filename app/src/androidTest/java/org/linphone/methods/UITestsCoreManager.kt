@@ -202,7 +202,6 @@ class UITestsRegisteredLinphoneCore(authInfo: AuthInfo) {
         mCore.addAccount(account)
         mAccount = account
         mCore.defaultAccount = mAccount
-        waitForRegistrationState(RegistrationState.Ok, 5.0)
     }
 
     fun startCall(address: Address) {

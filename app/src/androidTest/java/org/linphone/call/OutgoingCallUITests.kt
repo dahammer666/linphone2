@@ -45,6 +45,7 @@ class OutgoingCallUITests {
 
     @Test
     fun testViewDisplay() {
+        methods.checkCallTime(onView(withId(R.id.outgoing_call_timer)))
         methods.endCall(UITestsView.outgoingCallView)
         takeScreenshot("dialer_view", "declined")
     }

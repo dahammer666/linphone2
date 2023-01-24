@@ -152,8 +152,9 @@ object UITestsUtils {
     }
 
     fun ViewInteraction.checkWithTimeout(viewAssert: ViewAssertion, timeout: Double): ViewInteraction = runBlocking {
+        val time = Date().time
         val wait = launch(Dispatchers.Default) {
-            repeat(timeout.toInt() * 10) {
+            repeat((timeout * 10).toInt()) {
                 try {
                     check(viewAssert)
                     cancel()
@@ -164,6 +165,7 @@ object UITestsUtils {
             }
         }
         wait.join()
+        check { view, noViewFoundException -> Log.i("[UITests] $view (found in ${(Date().time - time).toFloat() / 1000} sec)") }
         check(viewAssert)
     }
 }

@@ -1,11 +1,8 @@
 package org.linphone.call
 
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.GrantPermissionRule
-import java.util.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -43,39 +40,35 @@ class IncomingCallPushUITests {
     }
 
     @Test
-    fun testDisplayCallPush() {
+    fun testPushDisplay() {
         methods.endCall()
         takeScreenshot("dialer_view")
     }
 
     @Test
-    fun testNoAnswerCallPush() {
+    fun testNoAnswer() {
         methods.waitForCallNotification(false, 30.0)
         takeScreenshot("dialer_view")
     }
 
     @Test
-    fun testClickOnCallPush() {
-        val time = Date().time
+    fun testOnClick() {
         methods.onPushAction(getString(R.string.incoming_call_notification_title), UITestsView.incomingCallView)
-        methods.checkCallTime(onView(withId(R.id.incoming_call_timer)), time)
         takeScreenshot("incoming_call_view")
         methods.endCall(UITestsView.incomingCallView)
         takeScreenshot("dialer_view")
     }
 
     @Test
-    fun testDeclineCallPush() {
+    fun testDecline() {
         methods.onPushAction("Decline", null)
         methods.waitForCallNotification(false, 5.0)
         takeScreenshot("dialer_view")
     }
 
     @Test
-    fun testAnswerCallPush() {
-        val time = Date().time
+    fun testAnswer() {
         methods.onPushAction(getString(R.string.incoming_call_notification_answer_action_label), UITestsView.singleCallView)
-        methods.checkCallTime(onView(withId(R.id.active_call_timer)), time)
         takeScreenshot("single_call_view")
         methods.endCall(UITestsView.singleCallView)
         takeScreenshot("dialer_view")

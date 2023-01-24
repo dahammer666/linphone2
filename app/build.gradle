@@ -88,10 +88,8 @@ android {
         versionName "${project.version}"
         applicationId getPackageName()
 
-        //testInstrumentationRunnerArguments clearPackageData: 'true'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testOptions {
-            //execution 'ANDROIDX_TEST_ORCHESTRATOR'
             animationsDisabled = true
         }
     }
@@ -263,10 +261,9 @@ dependencies {
     debugImplementation 'androidx.test:core:1.5.0'
     debugImplementation 'androidx.test.ext:junit-ktx:1.1.4'
 
-    debugImplementation 'androidx.test.espresso:espresso-core:3.5.0'
-    debugImplementation 'androidx.test.espresso:espresso-idling-resource:3.5.0'
+    debugImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    debugImplementation 'androidx.test.espresso:espresso-idling-resource:3.4.0'
     debugImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
-    //androidTestUtil 'androidx.test:orchestrator:1.4.2'
 }
 
 task generateContactsXml(type: Copy) {

@@ -30,8 +30,6 @@ object CallViewUITestsMethods {
     var appAccountAuthInfo: AuthInfo = UITestsCoreManager.instance.appAccountAuthInfo
     var ghostAccount: UITestsRegisteredLinphoneCore = UITestsCoreManager.instance.ghostAccounts[0]
 
-    var callTimeChecker: Job? = null
-
     fun refreshAccountInfo() {
         appAccountAuthInfo = UITestsCoreManager.instance.appAccountAuthInfo
         ghostAccount = UITestsCoreManager.instance.ghostAccounts[0]
@@ -52,12 +50,10 @@ object CallViewUITestsMethods {
         onView(withId(R.id.sip_uri_input)).perform(typeText(ghostAccount.mAuthInfo.username))
         onView(withContentDescription(R.string.content_description_start_call)).perform(click())
 
-        onView(withId(R.id.outgoing_call_layout)).checkWithTimeout(matches(isDisplayed()), 5.0)
-        callTimeChecker = checkCallTime(onView(withId(R.id.outgoing_call_timer)))
+        UITestsView.outgoingCallView.checkWithTimeout(matches(isDisplayed()), 5.0)
     }
 
     fun endCall(currentView: ViewInteraction? = null) {
-        runBlocking { callTimeChecker?.join() }
         if (ghostAccount.callState == Call.State.Released) { return }
 
         ghostAccount.terminateCall()
@@ -69,7 +65,7 @@ object CallViewUITestsMethods {
     fun checkCallTime(view: ViewInteraction, launchTime: Long = Date().time) = runBlocking {
         view.checkWithTimeout(matches(isDisplayed()), 2.0)
         val firstValue = ((Date().time - launchTime) / 1000).toInt() + 1
-        launch(Dispatchers.Default) {
+        val wait = launch(Dispatchers.Default) {
             val timerArray = arrayListOf<Int>()
             repeat(3) {
                 view.check { view, _ ->
@@ -82,6 +78,7 @@ object CallViewUITestsMethods {
             assert(timerArray == timerArray.sorted()) { "[UITests] Call Time is not correctly incremented, it is not increasing" }
             assert(timerArray.first() <= firstValue + 3) { "[UITests] Call Time is not correctly initialized, it is at ${timerArray.first()}, $firstValue seconds after the start)" }
         }
+        wait.join()
     }
 
     fun onPushAction(label: String, resultingView: ViewInteraction?, timeout: Double = 5.0) {
