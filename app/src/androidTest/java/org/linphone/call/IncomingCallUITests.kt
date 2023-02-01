@@ -16,6 +16,7 @@ import org.linphone.R
 import org.linphone.methods.*
 import org.linphone.methods.UITestsScreenshots.takeScreenshot
 import org.linphone.methods.UITestsUtils.checkWithTimeout
+import org.linphone.utils.AppUtils.Companion.getString
 
 @RunWith(AndroidJUnit4::class)
 class IncomingCallUITests {
