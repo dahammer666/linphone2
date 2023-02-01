@@ -6,7 +6,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
 import java.util.*
 import org.junit.After
 import org.junit.Before
@@ -17,10 +16,8 @@ import org.linphone.R
 import org.linphone.methods.*
 import org.linphone.methods.UITestsScreenshots.takeScreenshot
 import org.linphone.methods.UITestsUtils.checkWithTimeout
-import org.linphone.utils.AppUtils.Companion.getString
 
 @RunWith(AndroidJUnit4::class)
-@LargeTest
 class IncomingCallUITests {
 
     val methods = CallViewUITestsMethods

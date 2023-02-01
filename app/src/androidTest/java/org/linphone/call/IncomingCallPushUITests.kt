@@ -1,7 +1,6 @@
 package org.linphone.call
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -13,7 +12,6 @@ import org.linphone.methods.UITestsScreenshots.takeScreenshot
 import org.linphone.utils.AppUtils.Companion.getString
 
 @RunWith(AndroidJUnit4::class)
-@LargeTest
 class IncomingCallPushUITests {
 
     val methods = CallViewUITestsMethods

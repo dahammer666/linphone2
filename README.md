@@ -181,7 +181,7 @@ If you don't have Android Studio, you can run :
 
     ./gradlew connectedAndroidTest                            
 
-Android Instrumented UI tests wiki : https://wiki.linphone.org/xwiki/wiki/public/view/Linphone/
+Android Instrumented UI tests wiki : https://wiki.linphone.org/xwiki/bin/view/Engineering/Android%20UI%20Tests%20with%20Android%20Studio/
 
 # CONTRIBUTIONS
 

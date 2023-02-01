@@ -61,7 +61,7 @@ class UITestsCoreManager {
         accountCreator.domain = "sip.example.org"
         accountCreator.email = accountCreator.username + "@" + accountCreator.domain
         accountCreator.transport = TransportType.Tcp
-        accountCreator.createAccount()
+        assert(accountCreator.createAccount() == AccountCreator.Status.RequestOk) { "[UITests] Unable to send a request to create an account on server" }
         waitForAccountCreationStatus(AccountCreator.Status.AccountCreated, 5.0)
 
         val authInfo = factory.createAuthInfo(accountCreator.username!!, "", accountCreator.password, "", "", accountCreator.domain)
@@ -92,7 +92,6 @@ class UITestsCoreManager {
             ) {
                 super.onCreateAccount(creator, status, response)
                 if (wStatus == status) {
-                    Log.d("dsqdfs", status.ordinal)
                     result = true
                     wait.cancel()
                 }

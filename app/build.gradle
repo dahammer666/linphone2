@@ -262,7 +262,6 @@ dependencies {
     debugImplementation 'androidx.test.ext:junit-ktx:1.1.4'
 
     debugImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    debugImplementation 'androidx.test.espresso:espresso-idling-resource:3.4.0'
     debugImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
 }
 
