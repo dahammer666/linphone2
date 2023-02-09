@@ -59,7 +59,7 @@ for file in classNames:
             for div in message.find_all("div"):
                 div.decompose()
             Tests[fileName][testName][2] = message.text
-            Tests[fileName][testName][3] = "[[ATTACHMENT|" + " ".join(images) + "]]"
+            Tests[fileName][testName][3] = " ".join(["[[ATTACHMENT|" + img + "]]" for img in images])
     except:
         pass
 
