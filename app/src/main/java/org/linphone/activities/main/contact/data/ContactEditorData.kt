@@ -31,7 +31,7 @@ import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.contact.*
-import org.linphone.core.ChatRoomSecurityLevel
+import org.linphone.core.ChatRoom.SecurityLevel
 import org.linphone.core.Friend
 import org.linphone.core.tools.Log
 import org.linphone.utils.AppUtils
@@ -41,7 +41,7 @@ import org.linphone.utils.PermissionHelper
 class ContactEditorData(val friend: Friend?) : ContactDataInterface {
     override val contact: MutableLiveData<Friend> = MutableLiveData<Friend>()
     override val displayName: MutableLiveData<String> = MutableLiveData<String>()
-    override val securityLevel: MutableLiveData<ChatRoomSecurityLevel> = MutableLiveData<ChatRoomSecurityLevel>()
+    override val securityLevel: MutableLiveData<SecurityLevel> = MutableLiveData<SecurityLevel>()
     override val coroutineScope: CoroutineScope = coreContext.coroutineScope
 
     val firstName = MutableLiveData<String>()

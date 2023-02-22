@@ -96,7 +96,7 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
 
     val voiceRecordPlayingPosition = MutableLiveData<Int>()
 
-    val imeFlags: Int = if (chatRoom.hasCapability(ChatRoomCapabilities.Encrypted.toInt())) {
+    val imeFlags: Int = if (chatRoom.hasCapability(ChatRoom.Capabilities.Encrypted.toInt())) {
         // IME_FLAG_NO_PERSONALIZED_LEARNING is only available on Android 8 and newer
         Compatibility.getImeFlagsForSecureChatRoom()
     } else {
@@ -147,7 +147,7 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
         }
 
         if (this::recorder.isInitialized) {
-            if (recorder.state != RecorderState.Closed) {
+            if (recorder.state != Recorder.State.Closed) {
                 recorder.close()
             }
         }
@@ -222,7 +222,7 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
             chatRoom.createReplyMessage(pendingMessageToReplyTo.chatMessage)
         else
             chatRoom.createEmptyMessage()
-        val isBasicChatRoom: Boolean = chatRoom.hasCapability(ChatRoomCapabilities.Basic.toInt())
+        val isBasicChatRoom: Boolean = chatRoom.hasCapability(ChatRoom.Capabilities.Basic.toInt())
 
         var voiceRecord = false
         if (isPendingVoiceRecord.value == true && recorder.file != null) {
@@ -338,14 +338,14 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
         }
 
         when (recorder.state) {
-            RecorderState.Running -> Log.w("[Chat Message Sending] Recorder is already recording")
-            RecorderState.Paused -> {
+            Recorder.State.Running -> Log.w("[Chat Message Sending] Recorder is already recording")
+            Recorder.State.Paused -> {
                 Log.w("[Chat Message Sending] Recorder isn't closed, resuming recording")
                 recorder.start()
             }
-            RecorderState.Closed -> {
+            Recorder.State.Closed -> {
                 val extension = when (recorder.params.fileFormat) {
-                    RecorderFileFormat.Mkv -> "mkv"
+                    Recorder.FileFormat.Mkv -> "mkv"
                     else -> "wav"
                 }
                 val tempFileName = "voice-recording-${System.currentTimeMillis()}.$extension"
@@ -381,7 +381,7 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
     }
 
     fun cancelVoiceRecording() {
-        if (recorder.state != RecorderState.Closed) {
+        if (recorder.state != Recorder.State.Closed) {
             Log.i("[Chat Message Sending] Closing voice recorder")
             recorder.close()
 
@@ -408,7 +408,7 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
     }
 
     private fun stopVoiceRecorder() {
-        if (recorder.state == RecorderState.Running) {
+        if (recorder.state == Recorder.State.Running) {
             Log.i("[Chat Message Sending] Pausing / closing voice recorder")
             recorder.pause()
             recorder.close()
@@ -478,9 +478,9 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
         Log.i("[Chat Message Sending] Creating recorder for voice message")
         val recorderParams = coreContext.core.createRecorderParams()
         if (corePreferences.voiceMessagesFormatMkv) {
-            recorderParams.fileFormat = RecorderFileFormat.Mkv
+            recorderParams.fileFormat = Recorder.FileFormat.Mkv
         } else {
-            recorderParams.fileFormat = RecorderFileFormat.Wav
+            recorderParams.fileFormat = Recorder.FileFormat.Wav
         }
 
         val recordingAudioDevice = AudioRouteUtils.getAudioRecordingDeviceForVoiceMessage()
@@ -536,6 +536,6 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
     }
 
     private fun updateChatRoomReadOnlyState() {
-        isReadOnly.value = chatRoom.isReadOnly || (chatRoom.hasCapability(ChatRoomCapabilities.Conference.toInt()) && chatRoom.participants.isEmpty())
+        isReadOnly.value = chatRoom.isReadOnly || (chatRoom.hasCapability(ChatRoom.Capabilities.Conference.toInt()) && chatRoom.participants.isEmpty())
     }
 }

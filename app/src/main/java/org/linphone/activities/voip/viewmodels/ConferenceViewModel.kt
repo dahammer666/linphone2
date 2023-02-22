@@ -160,15 +160,15 @@ class ConferenceViewModel : ViewModel() {
         override fun onParticipantDeviceStateChanged(
             conference: Conference,
             device: ParticipantDevice,
-            state: ParticipantDeviceState
+            state: ParticipantDevice.State
         ) {
             if (conference.isMe(device.address)) {
                 when (state) {
-                    ParticipantDeviceState.Present -> {
+                    ParticipantDevice.State.Present -> {
                         Log.i("[Conference] Entered conference")
                         isConferenceLocallyPaused.value = false
                     }
-                    ParticipantDeviceState.OnHold -> {
+                    ParticipantDevice.State.OnHold -> {
                         Log.i("[Conference] Left conference")
                         isConferenceLocallyPaused.value = true
                     }
@@ -398,8 +398,8 @@ class ConferenceViewModel : ViewModel() {
                 }
 
                 params.conferenceVideoLayout = when (layout) {
-                    ConferenceDisplayMode.GRID -> ConferenceLayout.Grid
-                    else -> ConferenceLayout.ActiveSpeaker
+                    ConferenceDisplayMode.GRID -> Conference.Layout.Grid
+                    else -> Conference.Layout.ActiveSpeaker
                 }
                 call.update(params)
 
@@ -426,7 +426,7 @@ class ConferenceViewModel : ViewModel() {
             ConferenceDisplayMode.AUDIO_ONLY
         } else {
             when (params.conferenceVideoLayout) {
-                ConferenceLayout.Grid -> ConferenceDisplayMode.GRID
+                Conference.Layout.Grid -> ConferenceDisplayMode.GRID
                 else -> ConferenceDisplayMode.ACTIVE_SPEAKER
             }
         }

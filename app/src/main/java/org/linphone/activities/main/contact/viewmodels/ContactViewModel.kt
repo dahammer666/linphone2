@@ -53,7 +53,7 @@ class ContactViewModelFactory(private val friend: Friend) :
 class ContactViewModel(friend: Friend, async: Boolean = false) : MessageNotifierViewModel(), ContactDataInterface {
     override val contact: MutableLiveData<Friend> = MutableLiveData<Friend>()
     override val displayName: MutableLiveData<String> = MutableLiveData<String>()
-    override val securityLevel: MutableLiveData<ChatRoomSecurityLevel> = MutableLiveData<ChatRoomSecurityLevel>()
+    override val securityLevel: MutableLiveData<ChatRoom.SecurityLevel> = MutableLiveData<ChatRoom.SecurityLevel>()
     override val coroutineScope: CoroutineScope = viewModelScope
 
     var fullName = ""
@@ -204,7 +204,7 @@ class ContactViewModel(friend: Friend, async: Boolean = false) : MessageNotifier
             val presenceModel = friend.getPresenceModelForUriOrTel(value)
             val hasPresence = presenceModel?.basicStatus == PresenceBasicStatus.Open
             val isMe = coreContext.core.defaultAccount?.params?.identityAddress?.weakEqual(address) ?: false
-            val hasLimeCapability = corePreferences.allowEndToEndEncryptedChatWithoutPresence || (friend.getPresenceModelForUriOrTel(value)?.hasCapability(FriendCapability.LimeX3Dh) ?: false)
+            val hasLimeCapability = corePreferences.allowEndToEndEncryptedChatWithoutPresence || (friend.getPresenceModelForUriOrTel(value)?.hasCapability(Friend.Capability.LimeX3Dh) ?: false)
             val secureChatAllowed = LinphoneUtils.isEndToEndEncryptedChatAvailable() && !isMe && hasLimeCapability
             val displayValue = if (coreContext.core.defaultAccount?.params?.domain == address.domain) (address.username ?: value) else value
             val noa = ContactNumberOrAddressData(address, hasPresence, displayValue, showSecureChat = secureChatAllowed, listener = listener)
@@ -219,7 +219,7 @@ class ContactViewModel(friend: Friend, async: Boolean = false) : MessageNotifier
             val address = coreContext.core.interpretUrl(contactAddress, true)
             address?.displayName = displayName.value.orEmpty()
             val isMe = if (address != null) coreContext.core.defaultAccount?.params?.identityAddress?.weakEqual(address) ?: false else false
-            val hasLimeCapability = corePreferences.allowEndToEndEncryptedChatWithoutPresence || (friend.getPresenceModelForUriOrTel(number)?.hasCapability(FriendCapability.LimeX3Dh) ?: false)
+            val hasLimeCapability = corePreferences.allowEndToEndEncryptedChatWithoutPresence || (friend.getPresenceModelForUriOrTel(number)?.hasCapability(Friend.Capability.LimeX3Dh) ?: false)
             val secureChatAllowed = LinphoneUtils.isEndToEndEncryptedChatAvailable() && !isMe && hasLimeCapability
             val label = PhoneNumberUtils.vcardParamStringToAddressBookLabel(coreContext.context.resources, phoneNumber.label ?: "")
             val noa = ContactNumberOrAddressData(address, hasPresence, number, isSip = false, showSecureChat = secureChatAllowed, typeLabel = label, listener = listener)

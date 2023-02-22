@@ -99,7 +99,9 @@ class GroupInfoViewModel(val chatRoom: ChatRoom?) : MessageNotifierViewModel() {
         subject.value = chatRoom?.subject
         isMeAdmin.value = chatRoom == null || (chatRoom.me?.isAdmin == true && !chatRoom.isReadOnly)
         canLeaveGroup.value = chatRoom != null && !chatRoom.isReadOnly
-        isEncrypted.value = corePreferences.forceEndToEndEncryptedChat || chatRoom?.hasCapability(ChatRoomCapabilities.Encrypted.toInt()) == true
+        isEncrypted.value = corePreferences.forceEndToEndEncryptedChat || chatRoom?.hasCapability(
+            ChatRoom.Capabilities.Encrypted.toInt()
+        ) == true
 
         if (chatRoom != null) updateParticipants()
 
@@ -121,9 +123,9 @@ class GroupInfoViewModel(val chatRoom: ChatRoom?) : MessageNotifierViewModel() {
         params.isGroupEnabled = true
         if (params.isEncryptionEnabled) {
             params.ephemeralMode = if (corePreferences.useEphemeralPerDeviceMode)
-                ChatRoomEphemeralMode.DeviceManaged
+                ChatRoom.EphemeralMode.DeviceManaged
             else
-                ChatRoomEphemeralMode.AdminManaged
+                ChatRoom.EphemeralMode.AdminManaged
         }
         params.ephemeralLifetime = 0 // Make sure ephemeral is disabled by default
         Log.i("[Chat Room Group Info] Ephemeral mode is ${params.ephemeralMode}, lifetime is ${params.ephemeralLifetime}")

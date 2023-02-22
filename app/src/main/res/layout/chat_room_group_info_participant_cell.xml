@@ -3,7 +3,7 @@
 
     <data>
         <import type="android.view.View"/>
-        <import type="org.linphone.core.ChatRoomSecurityLevel"/>
+        <import type="org.linphone.core.ChatRoom.SecurityLevel"/>
         <variable
             name="removeClickListener"
             type="android.view.View.OnClickListener"/>
@@ -37,7 +37,7 @@
                 android:contentDescription="@null" />
 
             <ImageView
-                android:visibility="@{isEncrypted &amp;&amp; data.securityLevel == ChatRoomSecurityLevel.ClearText ? View.VISIBLE : View.GONE, default=gone}"
+                android:visibility="@{isEncrypted &amp;&amp; data.securityLevel == SecurityLevel.ClearText ? View.VISIBLE : View.GONE, default=gone}"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_alignParentTop="true"
@@ -46,7 +46,7 @@
                 android:src="@drawable/security_toggle_icon_green" />
 
             <ImageView
-                android:visibility="@{isEncrypted &amp;&amp; data.securityLevel != ChatRoomSecurityLevel.ClearText ? View.VISIBLE : View.GONE, default=gone}"
+                android:visibility="@{isEncrypted &amp;&amp; data.securityLevel != SecurityLevel.ClearText ? View.VISIBLE : View.GONE, default=gone}"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_alignParentTop="true"
