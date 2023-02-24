@@ -29,6 +29,7 @@ import android.text.style.ClickableSpan
 import android.view.View
 import androidx.lifecycle.ViewModelProvider
 import java.util.regex.Pattern
+import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.activities.*
@@ -54,9 +55,16 @@ class WelcomeFragment : GenericFragment<AssistantWelcomeFragmentBinding>() {
 
         binding.setCreateAccountClickListener {
             if (resources.getBoolean(R.bool.isTablet)) {
+                Log.i("[Assistant] Device seems to be a tablet, showing email based account creation")
                 navigateToEmailAccountCreation()
             } else {
-                navigateToPhoneAccountCreation()
+                if (coreContext.core.isPushNotificationAvailable) {
+                    Log.i("[Assistant] Device seems to be a phone, showing phone based account creation")
+                    navigateToPhoneAccountCreation()
+                } else {
+                    Log.w("[Assistant] Failed to get push notification info, showing warning instead of phone based account creation")
+                    navigateToNoPushWarning()
+                }
             }
         }
 

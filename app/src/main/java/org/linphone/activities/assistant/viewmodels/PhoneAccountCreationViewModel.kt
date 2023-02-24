@@ -142,7 +142,8 @@ class PhoneAccountCreationViewModel(accountCreator: AccountCreator) : AbstractPh
         super.onCleared()
     }
 
-    fun create() {
+    override fun onFlexiApiTokenReceived() {
+        Log.i("[Phone Account Creation] FlexiAPI auth token received: [${accountCreator.token}]")
         accountCreator.displayName = displayName.value
         accountCreator.setPhoneNumber(phoneNumber.value, prefix.value)
         if (useUsername.value == true) {
@@ -151,12 +152,29 @@ class PhoneAccountCreationViewModel(accountCreator: AccountCreator) : AbstractPh
             accountCreator.username = accountCreator.phoneNumber
         }
 
-        waitForServerAnswer.value = true
         val status = accountCreator.isAccountExist
         Log.i("[Phone Account Creation] isAccountExist returned $status")
         if (status != AccountCreator.Status.RequestOk) {
             waitForServerAnswer.value = false
             onErrorEvent.value = Event("Error: ${status.name}")
+        }
+    }
+
+    override fun onFlexiApiTokenRequestError() {
+        Log.e("[Phone Account Creation] Failed to get an auth token from FlexiAPI")
+        waitForServerAnswer.value = false
+        onErrorEvent.value = Event("Error: Failed to get an auth token from account manager server")
+    }
+
+    fun create() {
+        val token = "TODOFIXME" // TODO FIXME: accountCreator.token.orEmpty()
+        if (token.isNotEmpty()) {
+            Log.i("[Phone Account Creation] We already have an auth token from FlexiAPI [$token], continue")
+            onFlexiApiTokenReceived()
+        } else {
+            Log.i("[Phone Account Creation] Requesting an auth token from FlexiAPI")
+            waitForServerAnswer.value = true
+            requestFlexiApiToken()
         }
     }
 

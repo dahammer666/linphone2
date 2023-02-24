@@ -408,6 +408,8 @@
     <string name="assistant_generic_account_warning">Some features require a &appName; account, such as group messaging or ephemeral messaging.\n\nThese features are hidden when you register with a third party SIP account.\n\nTo enable it in a commercial project, please contact us.</string>
     <string name="assistant_generic_account_warning_contact_link" translatable="false">https://www.linphone.org/contact</string>
     <string name="assistant_generic_account_warning_continue_button_text">I understand</string>
+    <string name="assistant_alternative_way_create_account">To create an account using your email:</string>
+    <string name="assistant_no_push_warning">Your device doesn\'t seem to be able to receive push notifications.\n\nAs we now require them for the account creation process, you won\'t be able to create an account inside the app, but you can create it on our website:</string>
 
     <!-- Assistant errors -->
     <string name="assistant_error_phone_number_invalid_characters">Only digits are expected here</string>

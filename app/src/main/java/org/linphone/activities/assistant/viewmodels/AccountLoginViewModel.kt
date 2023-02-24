@@ -140,6 +140,17 @@ class AccountLoginViewModel(accountCreator: AccountCreator) : AbstractPhoneViewM
         super.onCleared()
     }
 
+    override fun onFlexiApiTokenReceived() {
+        Log.i("[Assistant] [Account Login] FlexiAPI auth token received: [${accountCreator.token}]")
+        loginWithPhoneNumber()
+    }
+
+    override fun onFlexiApiTokenRequestError() {
+        Log.e("[Assistant] [Account Login] Failed to get an auth token from FlexiAPI")
+        waitForServerAnswer.value = false
+        onErrorEvent.value = Event("Error: Failed to get an auth token from account manager server")
+    }
+
     fun removeInvalidProxyConfig() {
         val cfg = proxyConfigToCheck
         cfg ?: return
@@ -153,55 +164,71 @@ class AccountLoginViewModel(accountCreator: AccountCreator) : AbstractPhoneViewM
         leaveAssistantEvent.value = Event(true)
     }
 
+    private fun loginWithUsername() {
+        val result = accountCreator.setUsername(username.value)
+        if (result != AccountCreator.UsernameStatus.Ok) {
+            Log.e("[Assistant] [Account Login] Error [${result.name}] setting the username: ${username.value}")
+            usernameError.value = result.name
+            return
+        }
+        Log.i("[Assistant] [Account Login] Username is ${accountCreator.username}")
+
+        val result2 = accountCreator.setPassword(password.value)
+        if (result2 != AccountCreator.PasswordStatus.Ok) {
+            Log.e("[Assistant] [Account Login] Error [${result2.name}] setting the password")
+            passwordError.value = result2.name
+            return
+        }
+
+        waitForServerAnswer.value = true
+        coreContext.core.addListener(coreListener)
+        if (!createProxyConfig()) {
+            waitForServerAnswer.value = false
+            coreContext.core.removeListener(coreListener)
+            onErrorEvent.value = Event("Error: Failed to create account object")
+        }
+    }
+
+    private fun loginWithPhoneNumber() {
+        val result = AccountCreator.PhoneNumberStatus.fromInt(accountCreator.setPhoneNumber(phoneNumber.value, prefix.value))
+        if (result != AccountCreator.PhoneNumberStatus.Ok) {
+            Log.e("[Assistant] [Account Login] Error [$result] setting the phone number: ${phoneNumber.value} with prefix: ${prefix.value}")
+            phoneNumberError.value = result.name
+            return
+        }
+        Log.i("[Assistant] [Account Login] Phone number is ${accountCreator.phoneNumber}")
+
+        val result2 = accountCreator.setUsername(accountCreator.phoneNumber)
+        if (result2 != AccountCreator.UsernameStatus.Ok) {
+            Log.e("[Assistant] [Account Login] Error [${result2.name}] setting the username: ${accountCreator.phoneNumber}")
+            usernameError.value = result2.name
+            return
+        }
+        Log.i("[Assistant] [Account Login] Username is ${accountCreator.username}")
+
+        waitForServerAnswer.value = true
+        val status = accountCreator.recoverAccount()
+        Log.i("[Assistant] [Account Login] Recover account returned $status")
+        if (status != AccountCreator.Status.RequestOk) {
+            waitForServerAnswer.value = false
+            onErrorEvent.value = Event("Error: ${status.name}")
+        }
+    }
+
     fun login() {
         accountCreator.displayName = displayName.value
 
         if (loginWithUsernamePassword.value == true) {
-            val result = accountCreator.setUsername(username.value)
-            if (result != AccountCreator.UsernameStatus.Ok) {
-                Log.e("[Assistant] [Account Login] Error [${result.name}] setting the username: ${username.value}")
-                usernameError.value = result.name
-                return
-            }
-            Log.i("[Assistant] [Account Login] Username is ${accountCreator.username}")
-
-            val result2 = accountCreator.setPassword(password.value)
-            if (result2 != AccountCreator.PasswordStatus.Ok) {
-                Log.e("[Assistant] [Account Login] Error [${result2.name}] setting the password")
-                passwordError.value = result2.name
-                return
-            }
-
-            waitForServerAnswer.value = true
-            coreContext.core.addListener(coreListener)
-            if (!createProxyConfig()) {
-                waitForServerAnswer.value = false
-                coreContext.core.removeListener(coreListener)
-                onErrorEvent.value = Event("Error: Failed to create account object")
-            }
+            loginWithUsername()
         } else {
-            val result = AccountCreator.PhoneNumberStatus.fromInt(accountCreator.setPhoneNumber(phoneNumber.value, prefix.value))
-            if (result != AccountCreator.PhoneNumberStatus.Ok) {
-                Log.e("[Assistant] [Account Login] Error [$result] setting the phone number: ${phoneNumber.value} with prefix: ${prefix.value}")
-                phoneNumberError.value = result.name
-                return
-            }
-            Log.i("[Assistant] [Account Login] Phone number is ${accountCreator.phoneNumber}")
-
-            val result2 = accountCreator.setUsername(accountCreator.phoneNumber)
-            if (result2 != AccountCreator.UsernameStatus.Ok) {
-                Log.e("[Assistant] [Account Login] Error [${result2.name}] setting the username: ${accountCreator.phoneNumber}")
-                usernameError.value = result2.name
-                return
-            }
-            Log.i("[Assistant] [Account Login] Username is ${accountCreator.username}")
-
-            waitForServerAnswer.value = true
-            val status = accountCreator.recoverAccount()
-            Log.i("[Assistant] [Account Login] Recover account returned $status")
-            if (status != AccountCreator.Status.RequestOk) {
-                waitForServerAnswer.value = false
-                onErrorEvent.value = Event("Error: ${status.name}")
+            val token = "TODOFIXME" // TODO FIXME: accountCreator.token.orEmpty()
+            if (token.isNotEmpty()) {
+                Log.i("[Assistant] [Account Login] We already have an auth token from FlexiAPI [$token], continue")
+                onFlexiApiTokenReceived()
+            } else {
+                Log.i("[Assistant] [Account Login] Requesting an auth token from FlexiAPI")
+                waitForServerAnswer.value = true
+                loginWithPhoneNumber()
             }
         }
     }

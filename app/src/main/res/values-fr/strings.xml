@@ -772,4 +772,6 @@
     <string name="account_setting_delete_sip_linphone_org_confirmation_dialog">Votre compte sera supprimé localement.\nPour le supprimer de manière définitive, rendez-vous sur notre plateforme de gestion des comptes :</string>
     <string name="call_action_attended_transfer_call">Transfert supervisé</string>
     <string name="chat_room_last_message_sender_format">%s :</string>
+    <string name="assistant_alternative_way_create_account">Pour créer un compte avec votre email :</string>
+    <string name="assistant_no_push_warning">Votre périphérique ne semble pas supporter les notifications \'push\'.\n\nVous ne pourrez donc pas créer des comptes dans l\'application mais vous pouvez toujours le faire sur notre site internet :</string>
 </resources>
