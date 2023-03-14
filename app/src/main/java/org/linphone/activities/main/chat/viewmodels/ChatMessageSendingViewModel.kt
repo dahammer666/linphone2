@@ -21,6 +21,7 @@ package org.linphone.activities.main.chat.viewmodels
 
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
+import androidx.emoji2.emojipicker.EmojiViewItem
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -103,6 +104,8 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
         EditorInfo.IME_FLAG_NO_EXTRACT_UI
     }
 
+    val isEmojiPickerVisible = MutableLiveData<Boolean>()
+
     private lateinit var recorder: Recorder
 
     private var voiceRecordAudioFocusRequest: AudioFocusRequestCompat? = null
@@ -136,6 +139,7 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
 
         attachFileEnabled.value = true
         sendMessageEnabled.value = false
+        isEmojiPickerVisible.value = false
         updateChatRoomReadOnlyState()
     }
 
@@ -206,6 +210,14 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
         if (!corePreferences.allowMultipleFilesAndTextInSameMessage) {
             attachFileEnabled.value = list.isEmpty()
         }
+    }
+
+    fun appendEmoji(emoji: EmojiViewItem) {
+        textToSend.value = textToSend.value.orEmpty().plus(emoji.emoji)
+    }
+
+    fun toggleEmojiPicker() {
+        isEmojiPickerVisible.value = isEmojiPickerVisible.value == false
     }
 
     fun sendMessage() {

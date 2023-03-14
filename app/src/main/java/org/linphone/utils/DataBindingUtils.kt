@@ -34,6 +34,8 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.Guideline
 import androidx.databinding.*
+import androidx.emoji2.emojipicker.EmojiPickerView
+import androidx.emoji2.emojipicker.EmojiViewItem
 import coil.dispose
 import coil.load
 import coil.request.CachePolicy
@@ -772,4 +774,15 @@ fun ScrollDotsView.setItems(count: Int) {
 @BindingAdapter("selectedDot")
 fun ScrollDotsView.setSelectedIndex(index: Int) {
     setSelectedDot(index)
+}
+
+interface EmojiPickedListener {
+    fun onEmojiPicked(item: EmojiViewItem)
+}
+
+@BindingAdapter("emojiPickedListener")
+fun EmojiPickerView.setEmojiPickedListener(listener: EmojiPickedListener) {
+    setOnEmojiPickedListener { emoji ->
+        listener.onEmojiPicked(emoji)
+    }
 }
