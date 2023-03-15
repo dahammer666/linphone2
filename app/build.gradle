@@ -1,7 +1,6 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-    id 'kotlin-android-extensions'
     id 'kotlin-kapt'
     id 'org.jlleitschuh.gradle.ktlint'
     id 'org.jetbrains.kotlin.android'
@@ -14,9 +13,9 @@ static def getPackageName() {
     return "org.linphone"
 }
 
-def firebaseAvailable = new File(projectDir.absolutePath +'/google-services.json').exists()
+def firebaseAvailable = new File(projectDir.absolutePath + '/google-services.json').exists()
 
-def crashlyticsAvailable = new File(projectDir.absolutePath +'/google-services.json').exists() && new File(LinphoneSdkBuildDir + '/libs/').exists() && new File(LinphoneSdkBuildDir + '/libs-debug/').exists()
+def crashlyticsAvailable = new File(projectDir.absolutePath + '/google-services.json').exists() && new File(LinphoneSdkBuildDir + '/libs/').exists() && new File(LinphoneSdkBuildDir + '/libs-debug/').exists()
 
 if (firebaseAvailable) {
     apply plugin: 'com.google.gms.google-services'
@@ -106,16 +105,16 @@ android {
         // See https://developer.android.com/studio/releases/gradle-plugin#3-6-0-behavior for why extractNativeLibs is set to true in debug flavor
         if (variant.buildType.name == "release" || variant.buildType.name == "releaseWithCrashlytics") {
             variant.getMergedFlavor().manifestPlaceholders = [linphone_address_mime_type: "vnd.android.cursor.item/vnd." + getPackageName() + ".provider.sip_address",
-                                                              linphone_file_provider: getPackageName() + ".fileprovider",
-                                                              appLabel: "@string/app_name",
-                                                              firebaseServiceEnabled: enableFirebaseService,
-                                                              extractNativeLibs: "false"]
+                                                              linphone_file_provider    : getPackageName() + ".fileprovider",
+                                                              appLabel                  : "@string/app_name",
+                                                              firebaseServiceEnabled    : enableFirebaseService,
+                                                              extractNativeLibs         : "false"]
         } else {
             variant.getMergedFlavor().manifestPlaceholders = [linphone_address_mime_type: "vnd.android.cursor.item/vnd." + getPackageName() + ".provider.sip_address",
-                                                              linphone_file_provider: getPackageName() + ".debug.fileprovider",
-                                                              appLabel: "@string/app_name_debug",
-                                                              firebaseServiceEnabled: enableFirebaseService,
-                                                              extractNativeLibs: "true"]
+                                                              linphone_file_provider    : getPackageName() + ".debug.fileprovider",
+                                                              appLabel                  : "@string/app_name_debug",
+                                                              firebaseServiceEnabled    : enableFirebaseService,
+                                                              extractNativeLibs         : "true"]
         }
     }
 
@@ -213,7 +212,6 @@ dependencies {
     implementation "androidx.security:security-crypto-ktx:1.1.0-alpha05"
     implementation "androidx.window:window:1.0.0"
     implementation 'androidx.core:core-ktx:1.9.0'
-    implementation 'androidx.test:rules:1.4.0'
 
     def nav_version = "2.5.3"
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
@@ -257,11 +255,12 @@ dependencies {
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.4'
 
     // UITests dependencies
-    debugImplementation 'androidx.test:runner:1.5.1'
+    implementation 'androidx.test:rules:1.5.0'
+    debugImplementation 'androidx.test:runner:1.5.2'
     debugImplementation 'androidx.test:core:1.5.0'
-    debugImplementation 'androidx.test.ext:junit-ktx:1.1.4'
+    debugImplementation 'androidx.test.ext:junit-ktx:1.1.5'
 
-    debugImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    debugImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     debugImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
 }
 
@@ -270,9 +269,10 @@ task generateContactsXml(type: Copy) {
     into "src/main/res/xml/"
     outputs.upToDateWhen { file('src/main/res/xml/contacts.xml').exists() }
     filter {
-        line -> line
-                .replaceAll('%%AUTO_GENERATED%%', 'This file has been automatically generated, do not edit or commit !')
-                .replaceAll('%%PACKAGE_NAME%%', getPackageName())
+        line ->
+            line
+                    .replaceAll('%%AUTO_GENERATED%%', 'This file has been automatically generated, do not edit or commit !')
+                    .replaceAll('%%PACKAGE_NAME%%', getPackageName())
 
     }
 }
@@ -294,8 +294,8 @@ if (crashlyticsAvailable) {
 
 // screenshots ui tests
 
-def reportsDirectory = new File(buildDir,"reports${File.separator}androidTests${File.separator}connected").absolutePath
-def screenshotDirectory = new File(reportsDirectory,"screenshots").absolutePath
+def reportsDirectory = new File(buildDir, "reports${File.separator}androidTests${File.separator}connected").absolutePath
+def screenshotDirectory = new File(reportsDirectory, "screenshots").absolutePath
 
 def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
 
@@ -319,10 +319,10 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
         failedTestJunitReportContent = failedTestJunitReportContent.substring(0, failureCounterStart) + "$failure" + failedTestJunitReportContent.substring(failureCounterEnd)
         failedTestJunitReportContent = failedTestJunitReportContent.substring(0, percentInfoStart) + "$percent" + failedTestJunitReportContent.substring(percentInfoEnd)
 
-        return [failedTestJunitReportContent,failure,percent]
+        return [failedTestJunitReportContent, failure, percent]
     }
 
-    ext.addFailedTestsHeader = {failedTestJunitReportContent, mode ->
+    ext.addFailedTestsHeader = { failedTestJunitReportContent, mode ->
         def tab0 = "<a href=\"#tab0\">${mode}</a>\n</li>\n</ul>\n<div id=\"tab0\" class=\"tab\">"
         def tab0Index = failedTestJunitReportContent.indexOf(tab0)
 
@@ -335,14 +335,14 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
         return failedTestJunitReportContent
     }
 
-    ext.updateRecapValues = {failedTestJunitReportContent, name, failures, percent, variant ->
+    ext.updateRecapValues = { failedTestJunitReportContent, name, failures, percent, variant ->
         failedTestJunitReportContent = failedTestJunitReportContent.replace("\"success\"$variant>\n<a href=\"${name}", "\"failures\">\n<a href=\"${name}")
         def startIndex = failedTestJunitReportContent.lastIndexOf("${name}.html")
-        startIndex = failedTestJunitReportContent.indexOf("<td>", startIndex) +4
-        startIndex = failedTestJunitReportContent.indexOf("<td>", startIndex) +4
+        startIndex = failedTestJunitReportContent.indexOf("<td>", startIndex) + 4
+        startIndex = failedTestJunitReportContent.indexOf("<td>", startIndex) + 4
         def endIndex = failedTestJunitReportContent.indexOf("</td>", startIndex)
         failedTestJunitReportContent = failedTestJunitReportContent.substring(0, startIndex) + "${failures}" + failedTestJunitReportContent.substring(endIndex)
-        startIndex = failedTestJunitReportContent.indexOf("<td class=", startIndex) +10
+        startIndex = failedTestJunitReportContent.indexOf("<td class=", startIndex) + 10
         endIndex = failedTestJunitReportContent.indexOf("</td>", startIndex)
         failedTestJunitReportContent = failedTestJunitReportContent.substring(0, startIndex) + "\"failures\">${percent}%" + failedTestJunitReportContent.substring(endIndex)
         return failedTestJunitReportContent
@@ -366,7 +366,7 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
 
         failureScreenshotsDirectory.eachFile { failedTestClassDirectory ->
             def failedTestClassName = failedTestClassDirectory.name
-            def failedTestPackageName = failedTestClassName.substring(0,failedTestClassName.lastIndexOf("."))
+            def failedTestPackageName = failedTestClassName.substring(0, failedTestClassName.lastIndexOf("."))
 
             def packageJunitReportFile = new File(reportsDirectory, "${failedTestPackageName}.html")
             if (!packageJunitReportFile.exists()) {
@@ -391,16 +391,16 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
                     def failedTestCaseDescription = failedTestCase.name
                     def pt1 = failedTestCaseDescription.indexOf(".")
                     def line = failedTestCaseDescription.substring(0, pt1)
-                    def pt2 = failedTestCaseDescription.indexOf(".", pt1+1)
-                    def name = failedTestCaseDescription.substring(pt1+1, pt2)
-                    def pt3 = failedTestCaseDescription.indexOf(".", pt2+1)
+                    def pt2 = failedTestCaseDescription.indexOf(".", pt1 + 1)
+                    def name = failedTestCaseDescription.substring(pt1 + 1, pt2)
+                    def pt3 = failedTestCaseDescription.indexOf(".", pt2 + 1)
                     if (pt3 != -1) {
-                        name += " (${failedTestCaseDescription.substring(pt2+1,pt3)})"
+                        name += " (${failedTestCaseDescription.substring(pt2 + 1, pt3)})"
                     }
 
-                    failedTestJunitReportContent = addFailedTestsHeader(failedTestJunitReportContent,"Tests")
-                    packageJunitReportContent = addFailedTestsHeader(packageJunitReportContent,"Classes")
-                    indexJunitReportContent = addFailedTestsHeader(indexJunitReportContent,"Classes")
+                    failedTestJunitReportContent = addFailedTestsHeader(failedTestJunitReportContent, "Tests")
+                    packageJunitReportContent = addFailedTestsHeader(packageJunitReportContent, "Classes")
+                    indexJunitReportContent = addFailedTestsHeader(indexJunitReportContent, "Classes")
 
                     def failedTest = "<h3 class=\"failures\">${failedTestName}</h3>"
                     def failedTestIndex = failedTestJunitReportContent.indexOf(failedTest)
@@ -419,7 +419,7 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
                         }
 
                         //package.html
-                        newtestDiv = "<tr>\n<td class=\"failures\">\n<a href=\"${failedTestClassName}.html\">${failedTestClassName.substring(failedTestClassName.lastIndexOf(".")+1)}</a>\n</td>\n"
+                        newtestDiv = "<tr>\n<td class=\"failures\">\n<a href=\"${failedTestClassName}.html\">${failedTestClassName.substring(failedTestClassName.lastIndexOf(".") + 1)}</a>\n</td>\n"
                         newtestDiv += "<td class=\"failures\">\n<a href=\"${failedTestClassName}.html#${failedTestName}\">${failedTestName}</a>\n</td>\n</tr>\n"
                         endDiv = "</table>\n</ul>\n</div>\n<div id=\"tab1\""
                         packageJunitReportContent = packageJunitReportContent.replace(endDiv, newtestDiv + endDiv)
@@ -429,7 +429,7 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
                         }
 
                         //index.html
-                        newtestDiv = "<tr>\n<td class=\"failures\">\n<a href=\"${failedTestClassName}.html\">${failedTestClassName.substring(failedTestClassName.lastIndexOf(".")+1)}</a>\n</td>\n"
+                        newtestDiv = "<tr>\n<td class=\"failures\">\n<a href=\"${failedTestClassName}.html\">${failedTestClassName.substring(failedTestClassName.lastIndexOf(".") + 1)}</a>\n</td>\n"
                         newtestDiv += "<td class=\"failures\">\n<a href=\"${failedTestClassName}.html#${failedTestName}\">${failedTestName}</a>\n</td>\n</tr>\n"
                         endDiv = "</table>\n</ul>\n</div>\n<div id=\"tab1\""
                         indexJunitReportContent = indexJunitReportContent.replace(endDiv, newtestDiv + endDiv)
@@ -456,22 +456,20 @@ def embedScreenshotsTask = task('embedScreenshots', group: 'reporting') {
 
                 if (failures != 0) {
                     failedTestJunitReportContent = failedTestJunitReportContent.replace("<td>${failedTestName}</td>\n<td class=\"success\">passed", "<td>${failedTestName}</td>\n<td class=\"failures\">failed")
-                    def classSummaryValues = updateSummaryValues(failedTestJunitReportContent,failures)
-                    def packageSummaryValues = updateSummaryValues(packageJunitReportContent,failures)
-                    def indexSummaryValues = updateSummaryValues(indexJunitReportContent,failures)
+                    def classSummaryValues = updateSummaryValues(failedTestJunitReportContent, failures)
+                    def packageSummaryValues = updateSummaryValues(packageJunitReportContent, failures)
+                    def indexSummaryValues = updateSummaryValues(indexJunitReportContent, failures)
                     failedTestJunitReportContent = classSummaryValues[0]
                     packageJunitReportContent = packageSummaryValues[0]
                     indexJunitReportContent = indexSummaryValues[0]
 
-                    packageJunitReportContent = updateRecapValues(packageJunitReportContent,failedTestClassName,classSummaryValues[1],classSummaryValues[2],"")
-                    indexJunitReportContent = updateRecapValues(indexJunitReportContent,failedTestClassName,classSummaryValues[1],classSummaryValues[2],"/")
-                    indexJunitReportContent = updateRecapValues(indexJunitReportContent,failedTestPackageName,packageSummaryValues[1],packageSummaryValues[2],"")
+                    packageJunitReportContent = updateRecapValues(packageJunitReportContent, failedTestClassName, classSummaryValues[1], classSummaryValues[2], "")
+                    indexJunitReportContent = updateRecapValues(indexJunitReportContent, failedTestClassName, classSummaryValues[1], classSummaryValues[2], "/")
+                    indexJunitReportContent = updateRecapValues(indexJunitReportContent, failedTestPackageName, packageSummaryValues[1], packageSummaryValues[2], "")
 
                     failedTestClassJunitReportFile.write(failedTestJunitReportContent)
                     packageJunitReportFile.write(packageJunitReportContent)
                     indexJunitReportFile.write(indexJunitReportContent)
-
-
                 }
             }
         }
@@ -500,7 +498,7 @@ def fetchScreenshotsTask = task('fetchScreenshots', type: Exec, group: 'reportin
 def launchScreenshotsComparisonTask = task('launchScreenshotsComparison', type: Exec, group: 'reporting') {
     workingDir "$rootDir/screport/"
     def windowed = "true"
-    if (project.hasProperty("screportWindowed") ) {
+    if (project.hasProperty("screportWindowed")) {
         windowed = screportWindowed
     }
     commandLine "python3", "launch.py", "-rp", "$projectDir/src/androidTest/java/org/linphone/screenshots", "-sp", "$projectDir/build/reports/androidTests/connected/screenshots", "-wd", "$windowed"
@@ -519,10 +517,10 @@ def isScreenshotComparisonNeededTask = task('isScreenshotComparisonNeeded', type
     standardOutput = new ByteArrayOutputStream()
 
     doLast {
-        launchScreenshotsComparisonTask.onlyIf {"$standardOutput" == ""}
-        fetchScreenshotsTask.onlyIf {"$standardOutput" == ""}
-        clearScreenshotsTask.onlyIf {"$standardOutput" == ""}
-        embedScreenshotsTask.onlyIf {"$standardOutput" == ""}
+        launchScreenshotsComparisonTask.onlyIf { "$standardOutput" == "" }
+        fetchScreenshotsTask.onlyIf { "$standardOutput" == "" }
+        clearScreenshotsTask.onlyIf { "$standardOutput" == "" }
+        embedScreenshotsTask.onlyIf { "$standardOutput" == "" }
     }
 
     finalizedBy {
