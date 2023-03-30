@@ -19,6 +19,7 @@
  */
 package org.linphone.activities.main.settings.fragments
 
+import android.app.Dialog
 import android.os.Bundle
 import android.view.View
 import androidx.core.view.doOnPreDraw
@@ -29,21 +30,26 @@ import com.google.android.material.transition.MaterialSharedAxis
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.activities.*
+import org.linphone.activities.main.MainActivity
 import org.linphone.activities.main.fragments.MasterFragment
 import org.linphone.activities.main.fragments.SecureFragment
 import org.linphone.activities.main.settings.SettingListenerStub
 import org.linphone.activities.main.settings.viewmodels.SettingsViewModel
+import org.linphone.activities.main.viewmodels.DialogViewModel
 import org.linphone.activities.navigateToAccountSettings
 import org.linphone.activities.navigateToAudioSettings
 import org.linphone.activities.navigateToTunnelSettings
 import org.linphone.activities.navigateToVideoSettings
 import org.linphone.core.tools.Log
 import org.linphone.databinding.SettingsFragmentBinding
+import org.linphone.utils.DialogUtils
 
 class SettingsFragment : SecureFragment<SettingsFragmentBinding>() {
     private lateinit var viewModel: SettingsViewModel
 
     override fun getLayoutId(): Int = R.layout.settings_fragment
+
+    private var passwordDialog: Dialog? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -60,7 +66,12 @@ class SettingsFragment : SecureFragment<SettingsFragmentBinding>() {
 
         /* Shared view model & sliding pane related */
 
-        view.doOnPreDraw { sharedViewModel.isSlidingPaneSlideable.value = binding.slidingPane.isSlideable }
+        view.doOnPreDraw {
+            if (corePreferences.askForAccountPasswordToAccessSettings) {
+                showPasswordDialog()
+            }
+            sharedViewModel.isSlidingPaneSlideable.value = binding.slidingPane.isSlideable
+        }
 
         // Account settings loading can take some time, so wait until it is ready before opening the pane
         sharedViewModel.accountSettingsFragmentOpenedEvent.observe(
@@ -180,5 +191,46 @@ class SettingsFragment : SecureFragment<SettingsFragmentBinding>() {
                 navigateToConferencesSettings(binding.slidingPane)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (corePreferences.askForAccountPasswordToAccessSettings && passwordDialog == null) {
+            showPasswordDialog()
+        }
+    }
+
+    private fun showPasswordDialog() {
+        val dialogViewModel = DialogViewModel("Please input your password below to access the settings")
+        dialogViewModel.showIcon = true
+        dialogViewModel.iconResource = R.drawable.security_toggle_icon_green
+        dialogViewModel.showPassword = true
+        dialogViewModel.passwordTitle = "Password"
+        val dialog = DialogUtils.getDialog(requireContext(), dialogViewModel)
+        passwordDialog = dialog
+
+        dialogViewModel.showCancelButton {
+            goBack()
+            dialog.dismiss()
+            passwordDialog = null
+        }
+
+        dialogViewModel.showOkButton(
+            {
+                val password = dialogViewModel.password.orEmpty()
+                Log.i("[Settings] Password is [$password]")
+
+                if (password != "cotcotcot") {
+                    (requireActivity() as MainActivity).showSnackBar("Invalid password!")
+                    goBack()
+                }
+
+                dialog.dismiss()
+                passwordDialog = null
+            },
+            "Valider"
+        )
+
+        dialog.show()
     }
 }
